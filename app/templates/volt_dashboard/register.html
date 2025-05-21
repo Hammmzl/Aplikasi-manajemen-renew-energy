@@ -1,0 +1,53 @@
+{% extends 'volt_dashboard/layouts/auth_base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+      <div class="card border-0 shadow p-4 my-5">
+        <div class="text-center">
+          <img src="{{ url_for('static', filename='volt_dashboard/assets/img/brand/light.svg') }}" height="50" class="mb-4" alt="Volt Logo">
+          <h3 class="mb-4">Buat Akun Baru</h3>
+        </div>
+
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control") }}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
+          </div>
+
+          <div class="form-group mb-3">
+            {{ form.confirm_password.label(class="form-label") }}
+            {{ form.confirm_password(class="form-control") }}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-primary") }}
+          </div>
+        </form>
+
+        <div class="text-center">
+          <small>
+            Sudah punya akun? <a href="{{ url_for('auth.login') }}">Login di sini</a>
+          </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

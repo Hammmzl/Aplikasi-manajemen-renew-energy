@@ -1,0 +1,44 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+
+{% block content %}
+<div class="card shadow-sm p-4">
+  <h5 class="mb-4">Daftar Surat Jalan</h5>
+  <a href="{{ url_for('main.tambah_surat_jalan') }}" class="btn btn-primary mb-3">+ Tambah Surat Jalan</a>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nomor</th>
+          <th>Tanggal</th>
+          <th>No. Kendaraan</th>
+          <th>Owner</th>
+          <th>Supir</th>
+          <th>Penerima</th>
+          <th>Detail</th>
+          <th>Cetak</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for surat in surat_list %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ surat.nomor }}</td>
+          <td>{{ surat.tanggal.strftime('%d-%m-%Y') }}</td>
+          <td>{{ surat.no_kendaraan }}</td>
+          <td>{{ surat.owner }}</td>
+          <td>{{ surat.supir }}</td>
+          <td>{{ surat.penerima }}</td>
+          <td>
+            <a href="{{ url_for('main.detail_surat_jalan', surat_jalan_id=surat.id) }}" class="btn btn-info btn-sm">Detail</a>
+          </td>
+          <td>
+            <a href="{{ url_for('main.print_surat_jalan', surat_jalan_id=surat.id) }}" target="_blank" class="btn btn-success btn-sm">Cetak</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+/*! SimpleBar - v5.3.6 - 2023-01-14
+ * https://github.com/Grsmto/simplebar
+ * Copyright (c) 2023 Adrien Denat; Licensed MIT */
+.simplebar-scrollbar {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 7px;
+  transition: background-color 0.3s;
+}
+/* ... kode CSS simplebar.min.css versi minim ... */

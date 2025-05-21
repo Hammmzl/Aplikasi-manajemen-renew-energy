@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Your Name">
+  <meta name="description" content="Login Page">
+  <title>{% block title %}Login{% endblock %}</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='volt_dashboard/assets/img/favicon/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='volt_dashboard/assets/img/favicon/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='volt_dashboard/assets/img/favicon/favicon-16x16.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='volt_dashboard/assets/img/favicon/site.webmanifest') }}">
+
+  <!-- Volt CSS -->
+  <link type="text/css" href="{{ url_for('static', filename='volt_dashboard/assets/css/volt.css') }}" rel="stylesheet">
+
+  <!-- FontAwesome / Bootstrap Icon (optional) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-soft d-flex align-items-center min-vh-100">
+
+  {% block content %}{% endblock %}
+
+  <!-- Core -->
+  <script src="{{ url_for('static', filename='volt_dashboard/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <!-- Vendor JS -->
+  <script src="{{ url_for('static', filename='volt_dashboard/vendor/onscreen/dist/on-screen.umd.min.js') }}"></script>
+
+  <!-- Volt JS -->
+  <script src="{{ url_for('static', filename='volt_dashboard/assets/js/volt.js') }}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

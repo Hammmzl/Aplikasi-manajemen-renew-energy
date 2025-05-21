@@ -1,0 +1,45 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h5 class="mb-4">Detail Surat Jalan: {{ surat_jalan.nomor }}</h5>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p><strong>Tanggal:</strong> {{ surat_jalan.tanggal.strftime('%d-%m-%Y') }}</p>
+            <p><strong>No Kendaraan:</strong> {{ surat_jalan.no_kendaraan }}</p>
+            <p><strong>Tujuan:</strong> {{ surat_jalan.tujuan }}</p>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Owner:</strong> {{ surat_jalan.owner }}</p>
+            <p><strong>Supir:</strong> {{ surat_jalan.supir }}</p>
+            <p><strong>Penerima:</strong> {{ surat_jalan.penerima }}</p>
+        </div>
+    </div>
+
+    <h5>Detail Barang</h5>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Barang</th>
+                    <th>Jumlah</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detail in surat_jalan.details %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ detail.nama_barang }}</td>
+                    <td>{{ detail.jumlah }}</td>
+                    <td>{{ detail.keterangan }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{{ url_for('main.list_surat_jalan') }}" class="btn btn-secondary mt-3">Kembali</a>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Laporan Pembelian Minyak Jelantah</title>
+  <style>
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      margin: 20px;
+      color: #212529;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1em;
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5em;
+    }
+    th, td {
+      border: 1px solid #dee2e6;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+    tfoot td {
+      font-weight: 600;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .footer {
+      font-size: 10px;
+      text-align: center;
+      color: #6c757d;
+      margin-top: 30px;
+      border-top: 1px solid #dee2e6;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Laporan Pembelian Minyak Jelantah</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nama Pengepul</th>
+        <th>Tanggal Pembelian</th>
+        <th>Jumlah (Liter)</th>
+        <th>Harga per Liter (Rp)</th>
+        <th>Total Harga (Rp)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for purchase in purchases %}
+      <tr>
+        <td class="text-center">{{ loop.index }}</td>
+        <td>{{ purchase.nama_pengepul }}</td>
+        <td>{{ purchase.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
+        <td class="text-center">{{ '%.2f'|format(purchase.jumlah) }}</td>
+        <td class="text-end">{{ '{:,.0f}'.format(purchase.harga_per_liter) }}</td>
+        <td class="text-end">{{ '{:,.0f}'.format(purchase.jumlah * purchase.harga_per_liter) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="footer">
+    Laporan ini dibuat pada {{ generated_at }}
+  </div>
+</body>
+</html>

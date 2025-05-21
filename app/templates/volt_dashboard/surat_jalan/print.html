@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Surat Jalan {{ surat_jalan.nomor }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 8px 12px; border: 1px solid #333; }
+        .ttd-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+        .ttd-box {
+            width: 30%;
+        }
+        .ttd-space {
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Surat Jalan</h2>
+    <p><strong>Nomor:</strong> {{ surat_jalan.nomor }}</p>
+    <p><strong>Tanggal:</strong> {{ surat_jalan.tanggal.strftime('%d-%m-%Y') }}</p>
+    <p><strong>No. Kendaraan:</strong> {{ surat_jalan.no_kendaraan }}</p>
+    <p><strong>Tujuan:</strong> {{ surat_jalan.tujuan }}</p>
+
+    <h3>Detail Barang</h3>
+<table>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Nama Barang</th>
+            <th>Jumlah</th>
+            <th>Keterangan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detail in surat_jalan.details %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ detail.nama_barang }}</td>
+            <td>{{ detail.jumlah }}</td>
+            <td>{{ detail.keterangan }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    <div class="ttd-section">
+        <div class="ttd-box">
+            Owner<br>
+            <div class="ttd-space"></div>
+            <u>{{ surat_jalan.owner }}</u>
+        </div>
+        <div class="ttd-box">
+            Supir<br>
+            <div class="ttd-space"></div>
+            <u>{{ surat_jalan.supir }}</u>
+        </div>
+        <div class="ttd-box">
+            Penerima<br>
+            <div class="ttd-space"></div>
+            <u>{{ surat_jalan.penerima }}</u>
+        </div>
+    </div>
+
+</body>
+</html>

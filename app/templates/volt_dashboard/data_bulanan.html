@@ -1,0 +1,47 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h5>Purchase Data for {{ nama_bulan }} {{ tahun_ini }}</h5>
+    <div style="margin-bottom: 15px;">
+  <a href="{{ url_for('main.export_excel_bulanan') }}" class="btn btn-success">
+    Export Excel (This Month)
+  </a>
+  <a href="{{ url_for('main.export_pdf_bulanan') }}" class="btn btn-danger">
+    Export PDF (This Month)
+  </a>
+</div>
+
+
+  </div>
+  <div class="card-body">
+    {% if data %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Nama Pengepul</th>
+          <th>Tanggal</th>
+          <th>Jumlah</th>
+          <th>Harga/Liter</th>
+          <th>Total Harga</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in data %}
+        <tr>
+          <td>{{ item.nama_pengepul }}</td>
+          <td>{{ item.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
+          <td>{{ item.jumlah }}</td>
+          <td>{{ item.harga_per_liter }}</td>
+          <td>{{ item.total_harga }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Belum ada data bulan ini.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

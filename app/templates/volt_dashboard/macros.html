@@ -1,0 +1,10 @@
+{% macro sidebar_nav_item(endpoint, icon_class, label, external=False, target=None) %}
+<li class="nav-item">
+  <a href="{{ url_for(endpoint) if not external else endpoint }}"
+     class="nav-link d-flex align-items-center {% if request.endpoint == endpoint %}active{% endif %}"
+     {% if target %} target="{{ target }}" {% endif %}>
+    <span class="sidebar-icon"><i class="{{ icon_class }}"></i></span>
+    <span class="mt-1 ms-1 sidebar-text">{{ label }}</span>
+  </a>
+</li>
+{% endmacro %}

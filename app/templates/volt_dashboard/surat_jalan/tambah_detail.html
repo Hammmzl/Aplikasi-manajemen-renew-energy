@@ -1,0 +1,67 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block title %}Tambah Detail Barang - Surat Jalan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="h4 mb-4">Tambah Detail Barang — Surat Jalan {{ surat_jalan.nomor }}</h2>
+
+  <form method="POST" class="mb-4">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.nama_barang.label(class="form-label") }}
+      {{ form.nama_barang(class="form-control") }}
+      {% if form.nama_barang.errors %}
+        <div class="text-danger">{{ form.nama_barang.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.jumlah.label(class="form-label") }}
+      {{ form.jumlah(class="form-control") }}
+      {% if form.jumlah.errors %}
+        <div class="text-danger">{{ form.jumlah.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.keterangan.label(class="form-label") }}
+      {{ form.keterangan(class="form-control") }}
+      {% if form.keterangan.errors %}
+        <div class="text-danger">{{ form.keterangan.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('main.list_surat_jalan') }}" class="btn btn-secondary ms-2">Selesai</a>
+  </form>
+
+  <h4>Daftar Detail Barang</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nama Barang</th>
+        <th>Jumlah</th>
+        <th>Keterangan</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for detail in details %}
+      <tr>
+        <td>{{ detail.nama_barang }}</td>
+        <td>{{ detail.jumlah }}</td>
+        <td>{{ detail.keterangan }}</td>
+        <td>
+        <a href="{{ url_for('main.hapus_detail', detail_id=detail.id, surat_jalan_id=surat_jalan.id) }}" class="btn btn-danger btn-sm">Hapus</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" class="text-center">Belum ada detail barang.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

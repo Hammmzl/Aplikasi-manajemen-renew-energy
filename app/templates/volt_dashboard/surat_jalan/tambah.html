@@ -1,0 +1,71 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block title %}Tambah Surat Jalan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="h4 mb-4">Tambah Surat Jalan</h2>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.nomor.label(class="form-label") }}
+      {{ form.nomor(class="form-control") }}
+      {% if form.nomor.errors %}
+        <div class="text-danger">{{ form.nomor.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.tanggal.label(class="form-label") }}
+      {{ form.tanggal(class="form-control", type="date") }}
+      {% if form.tanggal.errors %}
+        <div class="text-danger">{{ form.tanggal.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.no_kendaraan.label(class="form-label") }}
+      {{ form.no_kendaraan(class="form-control") }}
+      {% if form.no_kendaraan.errors %}
+        <div class="text-danger">{{ form.no_kendaraan.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.tujuan.label(class="form-label") }}
+      {{ form.tujuan(class="form-control") }}
+      {% if form.tujuan.errors %}
+        <div class="text-danger">{{ form.tujuan.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.owner.label(class="form-label") }}
+      {{ form.owner(class="form-control") }}
+      {% if form.owner.errors %}
+        <div class="text-danger">{{ form.owner.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.supir.label(class="form-label") }}
+      {{ form.supir(class="form-control") }}
+      {% if form.supir.errors %}
+        <div class="text-danger">{{ form.supir.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.penerima.label(class="form-label") }}
+      {{ form.penerima(class="form-control") }}
+      {% if form.penerima.errors %}
+        <div class="text-danger">{{ form.penerima.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('main.list_surat_jalan') }}" class="btn btn-secondary ms-2">Kembali</a>
+  </form>
+</div>
+{% endblock %}
