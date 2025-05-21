@@ -48,28 +48,28 @@
         </tr>
       </thead>
       <tbody>
-        {% if purchases %}
-          {% for purchase in purchases %}
-            <tr>
-              <td>{{ (page - 1) * 10 + loop.index }}</td>
-              <td>{{ purchase.nama_pengepul }}</td>
-              <td>{{ purchase.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
-              <td>{{ '%.2f'|format(purchase.jumlah) }}</td>
-              <td>{{ '{:,.0f}'.format(purchase.harga_per_liter) }}</td>
-              <td>{{ '{:,.0f}'.format(purchase.jumlah * purchase.harga_per_liter) }}</td>
-              <td class="text-center">
-                <a href="{{ url_for('main.edit', id=purchase.id) }}" class="btn btn-sm btn-warning me-1" title="Edit">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <form action="{{ url_for('main.hapus', id=purchase.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin hapus data ini?');">
-                  <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
-                </form>
-              </td>
-            </tr>
-          {% endfor %}
-        {% else %}
+                {% if purchases %}
+            {% for purchase in purchases %}
+              <tr>
+                <td>{{ (page - 1) * 10 + loop.index }}</td>
+                <td>{{ purchase.client.nama_client }}</td>
+                <td>{{ purchase.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
+                <td>{{ '%.2f'|format(purchase.jumlah) }}</td>
+                <td>{{ '{:,.0f}'.format(purchase.harga_per_liter) }}</td>
+                <td>{{ '{:,.0f}'.format(purchase.jumlah * purchase.harga_per_liter) }}</td>
+                <td class="text-center">
+                  <a href="{{ url_for('main.edit', id=purchase.id) }}" class="btn btn-sm btn-warning me-1" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <form action="{{ url_for('main.hapus', id=purchase.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin hapus data ini?');">
+                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
           <tr>
             <td colspan="7" class="text-center text-muted">Data tidak ditemukan.</td>
           </tr>

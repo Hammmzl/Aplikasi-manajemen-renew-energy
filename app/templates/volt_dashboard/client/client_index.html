@@ -1,0 +1,38 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+    <h2 class="h4">Data Client</h2>
+<a href="{{ url_for('client.client_tambah') }}" class="btn btn-primary">+ Tambah Client</a>
+
+</div>
+
+<div class="table-responsive">
+    <table class="table table-centered table-hover">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Client</th>
+                <th>Alamat</th>
+                <th>Kontak</th>
+                <th>Email</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ client.nama_client }}</td>
+                <td>{{ client.alamat }}</td>
+                <td>{{ client.no_hp }}</td>
+                <td>{{ client.email }}</td>
+                <td>
+                    <a href="{{ url_for('client.client_edit', id=client.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ url_for('client.client_hapus', id=client.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')">Hapus</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

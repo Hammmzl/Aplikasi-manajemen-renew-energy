@@ -6,10 +6,11 @@
 <div class="container py-4">
   <h2 class="mb-4">Tambah Data Pembelian Minyak Jelantah</h2>
 
-  <form method="POST" action="{{ url_for('main.tambah') }}">
+  <form method="POST" action="{{ url_for('main.tambah_pembelian') }}">
+    {{ form.hidden_tag() }}
     <div class="mb-3">
-      <label for="nama_pengepul" class="form-label">Nama Pengepul</label>
-      <input type="text" class="form-control" id="nama_pengepul" name="nama_pengepul" required autofocus>
+    {{ form.client_id.label(class="form-label") }}
+    {{ form.client_id(class="form-select") }}
     </div>
 
     <div class="mb-3">

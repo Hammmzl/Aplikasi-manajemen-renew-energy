@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, make_response, Response, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from app.models import User, WasteOilPurchase
+from app.models import User, WasteOilPurchase, SuratJalan, SuratJalanDetail, Client
 from app.extensions import db, login_manager
 from app.models import WasteOilPurchase
 from datetime import datetime
@@ -14,7 +14,7 @@ import calendar
 from app.main.utils import generate_monthly_purchase_dataframe
 from io import BytesIO
 from app.main.forms import SuratJalanForm, SuratJalanDetailForm
-from app.models import SuratJalan, SuratJalanDetail
+
 
 
 main_bp = Blueprint('main', __name__, template_folder='templates/volt_dashboard')
@@ -52,67 +52,56 @@ def index():
                            search_query=search_query,
                            date_filter=date_filter)
 
-@main_bp.route('/tambah', methods=['GET', 'POST'])
-@login_required
-def tambah():
-    if request.method == 'POST':
-        print("Form manual valid, mulai simpan data...")
-        try:
-            nama_pengepul = request.form['nama_pengepul']
-            tanggal_pembelian = datetime.strptime(request.form['tanggal_pembelian'], '%Y-%m-%d')
-            jumlah = float(request.form['jumlah'])
-            harga_per_liter = float(request.form['harga_per_liter'])
-            total_harga = jumlah * harga_per_liter
 
-            purchase = WasteOilPurchase(
-                nama_pengepul=nama_pengepul,
-                tanggal_pembelian=tanggal_pembelian,
-                jumlah=jumlah,
-                harga_per_liter=harga_per_liter,
-                total_harga=total_harga,
-                created_at=datetime.utcnow(),
-                user_id=current_user.id
-            )
-            db.session.add(purchase)
-            db.session.commit()
-            flash('Data pembelian berhasil disimpan.', 'success')
-            return redirect(url_for('main.index'))
 
-        except Exception as e:
-            db.session.rollback()
-            print("Gagal commit ke database:", e)
-            flash('Terjadi kesalahan saat menyimpan data.', 'danger')
+@main_bp.route('/tambah_pembelian', methods=['GET', 'POST'])
+def tambah_pembelian():
+    form = WasteOilPurchaseForm()
+    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.all()]
 
-    return render_template('volt_dashboard/tambah.html')
+    if form.validate_on_submit():
+        pembelian = WasteOilPurchase(
+            client_id=form.client_id.data,
+            tanggal_pembelian=form.tanggal_pembelian.data,
+            jumlah=form.jumlah.data,
+            harga_per_liter=form.harga_per_liter.data,
+            total_harga=form.jumlah.data * form.harga_per_liter.data,
+            user_id=current_user.id  # kalau kamu pakai flask-login
+        )
+        db.session.add(pembelian)
+        db.session.commit()
+        flash('Data pembelian berhasil ditambahkan.', 'success')
+        return redirect(url_for('main.index'))
+
+    return render_template('volt_dashboard/tambah.html', form=form)
 
 
 @main_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
     purchase = WasteOilPurchase.query.get_or_404(id)
+    form = WasteOilPurchaseForm()
 
-    if request.method == 'POST':
-        nama_pengepul = request.form['nama_pengepul']
-        tanggal_pembelian = request.form['tanggal_pembelian']
-        jumlah = request.form['jumlah']
-        harga_per_liter = request.form['harga_per_liter']
+    # isi pilihan client
+    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.all()]
 
-        try:
-            tanggal_obj = datetime.strptime(tanggal_pembelian, '%Y-%m-%d').date()
-            jumlah_float = float(jumlah)
-            harga_float = float(harga_per_liter)
-        except Exception:
-            flash('Input tidak valid, silakan coba lagi.', 'danger')
-            return redirect(url_for('main.edit', id=id))
-
-        purchase.nama_pengepul = nama_pengepul
-        purchase.tanggal_pembelian = tanggal_obj
-        purchase.jumlah = jumlah_float
-        purchase.harga_per_liter = harga_float
+    if form.validate_on_submit():
+        purchase.client_id = form.client_id.data
+        purchase.tanggal_pembelian = form.tanggal_pembelian.data
+        purchase.jumlah = float(form.jumlah.data)
+        purchase.harga_per_liter = float(form.harga_per_liter.data)
+        purchase.total_harga = purchase.jumlah * purchase.harga_per_liter
         db.session.commit()
         flash('Data pembelian berhasil diperbarui', 'success')
         return redirect(url_for('main.index'))
 
-    return render_template('volt_dashboard/edit.html', purchase=purchase)
+    # isi data lama ke form waktu GET
+    form.client_id.data = purchase.client_id
+    form.tanggal_pembelian.data = purchase.tanggal_pembelian
+    form.jumlah.data = purchase.jumlah
+    form.harga_per_liter.data = purchase.harga_per_liter
+
+    return render_template('volt_dashboard/edit.html', form=form, purchase=purchase)
+
 
 
 # Flask-Login user loader
@@ -139,7 +128,7 @@ def export_excel():
     data = []
     for p in purchases:
         data.append({
-            'Nama Pengepul': p.nama_pengepul,
+            'Nama Pengepul': p.client.nama_client if p.client else '-', 
             'Tanggal Pembelian': p.tanggal_pembelian.strftime('%d-%m-%Y'),
             'Jumlah (Liter)': p.jumlah,
             'Harga per Liter (Rp)': p.harga_per_liter,
@@ -206,20 +195,51 @@ def data_bulanan():
 @main_bp.route('/export_excel_bulanan')
 @login_required
 def export_excel_bulanan():
-    
-    df = generate_monthly_purchase_dataframe()
+    from datetime import datetime, date, timedelta
 
+    # Hitung awal dan akhir bulan sekarang
+    today = date.today()
+    awal_bulan = today.replace(day=1)
+    if today.month == 12:
+        akhir_bulan = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        akhir_bulan = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+
+    # Ambil data pembelian bulan ini
+    purchases = WasteOilPurchase.query\
+        .filter(WasteOilPurchase.tanggal_pembelian >= awal_bulan)\
+        .filter(WasteOilPurchase.tanggal_pembelian <= akhir_bulan)\
+        .order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
+
+    # Siapkan data buat ke DataFrame
+    data = []
+    for p in purchases:
+        data.append({
+            'Nama Pengepul': p.client.nama_client if p.client else '-',
+            'Tanggal Pembelian': p.tanggal_pembelian.strftime('%d-%m-%Y'),
+            'Jumlah (Liter)': p.jumlah,
+            'Harga per Liter (Rp)': p.harga_per_liter,
+            'Total Harga (Rp)': p.jumlah * p.harga_per_liter
+        })
+
+    # Convert ke DataFrame
+    df = pd.DataFrame(data)
+
+    # Simpan ke file Excel di memory
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='Pembelian Bulanan')
     output.seek(0)
-    bulan_ini = datetime.now()
-    nama_file = f"Data Pembelian {bulan_ini.strftime('%B %Y')}.xlsx"
-    response = make_response(output.read())
-    response.headers['Content-Disposition'] = f'attachment; filename={nama_file}'
-    response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    return response
 
+    # Format nama file pakai bulan dan tahun sekarang
+    bulan_ini_str = datetime.now().strftime('%B %Y')
+    nama_file = f"Data Pembelian {bulan_ini_str}.xlsx"
+
+    # Buat response buat download
+    return send_file(output,
+                     download_name=nama_file,
+                     as_attachment=True,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @main_bp.route('/export-pdf-bulanan')
 @login_required

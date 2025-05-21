@@ -1,0 +1,25 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block content %}
+<h2 class="h4">Edit Client</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.nama_client.label(class="form-label") }}
+        {{ form.nama_client(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.alamat.label(class="form-label") }}
+        {{ form.alamat(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.no_hp.label(class="form-label") }}
+        {{ form.no_hp(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{{ url_for('client.client_index') }}" class="btn btn-secondary">Kembali</a>
+</form>
+{% endblock %}

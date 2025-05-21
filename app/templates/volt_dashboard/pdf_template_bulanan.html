@@ -28,7 +28,7 @@
             {% for d in data %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ d.nama_pengepul }}</td>
+                <td>{{ d.client.nama_client }}</td>
                 <td>{{ d.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
                 <td>{{ d.jumlah }}</td>
                 <td>Rp{{ "{:,.0f}".format(d.harga_per_liter) }}</td>

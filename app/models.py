@@ -33,24 +33,42 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 # WasteOilPurchase model
 class WasteOilPurchase(db.Model):
     __tablename__ = 'waste_oil_purchases'
 
     id = db.Column(db.Integer, primary_key=True)
-    nama_pengepul = db.Column(db.String(100), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     tanggal_pembelian = db.Column(db.Date, nullable=False)
     jumlah = db.Column(db.Float, nullable=False)
     harga_per_liter = db.Column(db.Integer, nullable=False)
     total_harga = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relasi ke User
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
+    # Relasi ke Client
+    client = db.relationship('Client', back_populates='pembelian')
+
     def __repr__(self):
-        return f'<WasteOilPurchase {self.nama_pengepul} {self.tanggal_pembelian}>'
+        return f'<WasteOilPurchase {self.client_id} {self.tanggal_pembelian}>'
+
+
+# Client model
+class Client(db.Model):
+    __tablename__ = 'clients'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nama_client = db.Column(db.String(100), nullable=False)
+    alamat = db.Column(db.String(255))
+    no_hp = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+
+    # Relasi ke WasteOilPurchase
+    pembelian = db.relationship('WasteOilPurchase', back_populates='client', lazy=True)
+
+    def __repr__(self):
+        return f'<Client {self.nama_client}>'
+
     
 # SuratJalan model
 
@@ -71,4 +89,8 @@ class SuratJalanDetail(db.Model):
     nama_barang = db.Column(db.String(100), nullable=False)
     jumlah = db.Column(db.Integer, nullable=False)
     keterangan = db.Column(db.String(200))
+
+
+
+
 

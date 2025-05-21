@@ -30,7 +30,7 @@
       <tbody>
         {% for item in data %}
         <tr>
-          <td>{{ item.nama_pengepul }}</td>
+          <td>{{ item.client.nama_client }}</td>
           <td>{{ item.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
           <td>{{ item.jumlah }}</td>
           <td>{{ item.harga_per_liter }}</td>

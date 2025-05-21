@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, DecimalField, DateField, IntegerField, FieldList, FormField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, DecimalField, DateField, IntegerField, FieldList, FormField, SubmitField, SelectField
 from wtforms.validators import DataRequired
 from wtforms.validators import DataRequired, NumberRange
+from app.models import Client
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -11,7 +12,7 @@ class LoginForm(FlaskForm):
 
 
 class WasteOilPurchaseForm(FlaskForm):
-    nama_pengepul = StringField('Nama Pengepul', validators=[DataRequired()])
+    client_id = SelectField('Nama Client', coerce=int, validators=[DataRequired()])
     tanggal_pembelian = DateField('Tanggal Pembelian', validators=[DataRequired()])
     jumlah = DecimalField('Jumlah (liter)', validators=[DataRequired(), NumberRange(min=0)])
     harga_per_liter = DecimalField('Harga per Liter', validators=[DataRequired(), NumberRange(min=0)])

@@ -16,13 +16,17 @@ def create_app():
     login_manager.login_view = 'auth.login'
     migrate.init_app(app, db)
 
-    from .models import User # pastikan models di-import
+    # Import model di sini biar migrate bisa detect
+    from app.models import User
 
-    # Import blueprint di sini supaya extensions sudah diinisialisasi duluan
+    # Import blueprint setelah extensions inisialisasi
     from app.main.routes import main_bp
     from app.auth.routes import auth_bp
+    from app.client.routes import client_bp
 
+    # Register blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(client_bp)
 
     return app
