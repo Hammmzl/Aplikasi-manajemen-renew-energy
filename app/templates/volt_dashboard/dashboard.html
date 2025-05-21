@@ -3,30 +3,107 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="row justify-content-md-center">
-  <div class="col-12 mb-4">
-    <div class="card bg-yellow-alt shadow-sm">
-      <div class="card-header d-flex flex-row align-items-center flex-0">
-        <div class="d-block">
-          <div class="h5 font-weight-normal mb-2">Sales Value</div>
-          <h2 class="h3">Rp 12,350,000</h2>
-          <div class="small mt-2"> 
-            <span class="font-weight-bold mr-2">Kemarin</span>                              
-            <span class="fas fa-angle-up text-success"></span>                                   
-            <span class="text-success font-weight-bold">+8.75%</span>
-          </div>
+<div class="row">
+ <!-- Total Pembelian -->
+
+
+
+  <!-- Clients -->
+<div class="col-12 col-sm-6 col-xl-3 mb-4">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <div class="row d-flex align-items-center">
+        <div class="col">
+          <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
+          <h4 class="mb-0">{{ total_clients }}</h4>
+          <small class="text-success fw-bold">
+            +{{ persentase_clients }}%
+          </small>
+          <small class="text-muted"> Since last month</small>
         </div>
-        <div class="d-flex ms-auto">
-          <a href="#" class="btn btn-secondary text-dark btn-sm me-2">Bulan</a>
-          <a href="#" class="btn btn-primary btn-sm">Minggu</a>
+        <div class="col-auto">
+          <span class="icon icon-sm">
+            <i class="fas fa-users text-info"></i>
+          </span>
         </div>
-      </div>
-      <div class="card-body p-2">
-        <div class="ct-chart-sales-value ct-double-octave ct-series-g"></div>
       </div>
     </div>
   </div>
 </div>
+<!-- Clients -->
+<div class="col-12 col-sm-6 col-xl-3 mb-4">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <div class="row d-flex align-items-center">
+        <div class="col">
+          <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
+          <h4 class="mb-0">{{ total_clients }}</h4>
+          <small class="text-success fw-bold">
+            +{{ persentase_clients }}%
+          </small>
+          <small class="text-muted"> Since last month</small>
+        </div>
+        <div class="col-auto">
+          <span class="icon icon-sm">
+            <i class="fas fa-users text-info"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Clients -->
+<div class="col-12 col-sm-6 col-xl-3 mb-4">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <div class="row d-flex align-items-center">
+        <div class="col">
+          <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
+          <h4 class="mb-0">{{ total_clients }}</h4>
+          <small class="text-success fw-bold">
+            +{{ persentase_clients }}%
+          </small>
+          <small class="text-muted"> Since last month</small>
+        </div>
+        <div class="col-auto">
+          <span class="icon icon-sm">
+            <i class="fas fa-users text-info"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Keuntungan -->
+<div class="col-12 col-sm-6 col-xl-3 mb-4">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <div class="row d-flex align-items-center">
+        <div class="col">
+          <h6 class="text-xs text-uppercase text-muted mb-1">Keuntungan</h6>
+          <h4 class="mb-0">Rp {{ "{:,.0f}".format(total_profit) }}</h4>
+          <small class="text-success fw-bold">
+            +{{ persentase_keuntungan }}%
+          </small>
+          <small class="text-muted"> Since last month</small>
+        </div>
+        <div class="col-auto">
+          <span class="icon icon-sm">
+            <i class="fas fa-dollar-sign text-success"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Kamu bisa lanjut tambahkan card lain di sini -->
+</div>
+
+
 {% endblock %}
 
 {% block scripts %}
@@ -35,25 +112,5 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist/dist/chartist.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chartist/dist/chartist.min.js"></script>
 
-<script>
-  // Chart Sales Value dummy data
-  new Chartist.Line('.ct-chart-sales-value', {
-    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-    series: [
-      [1100000, 1250000, 950000, 1370000, 1180000, 1235000, 1300000]
-    ]
-  }, {
-    low: 0,
-    showArea: true,
-    fullWidth: true,
-    chartPadding: {
-      right: 40
-    },
-    axisY: {
-      labelInterpolationFnc: function(value) {
-        return 'Rp ' + (value / 1000000).toFixed(1) + ' jt';
-      }
-    }
-  });
-</script>
+
 {% endblock %}

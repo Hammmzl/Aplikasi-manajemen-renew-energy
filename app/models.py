@@ -62,6 +62,7 @@ class Client(db.Model):
     alamat = db.Column(db.String(255))
     no_hp = db.Column(db.String(20))
     email = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relasi ke WasteOilPurchase
     pembelian = db.relationship('WasteOilPurchase', back_populates='client', lazy=True)

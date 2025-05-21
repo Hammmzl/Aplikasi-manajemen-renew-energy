@@ -9,11 +9,12 @@ import io
 import pandas as pd
 from weasyprint import HTML
 from .forms import WasteOilPurchaseForm
-from sqlalchemy import extract
+from sqlalchemy import extract, func
 import calendar
 from app.main.utils import generate_monthly_purchase_dataframe
 from io import BytesIO
 from app.main.forms import SuratJalanForm, SuratJalanDetailForm
+from dateutil.relativedelta import relativedelta
 
 
 
@@ -171,10 +172,7 @@ def cetak_pdf():
     return response
 
 
-@main_bp.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('volt_dashboard/dashboard.html')
+
 
 @main_bp.route('/data-bulanan')
 @login_required
@@ -366,3 +364,60 @@ def print_surat_jalan(surat_jalan_id):
     response.headers['Content-Disposition'] = f'inline; filename={filename}'
 
     return response
+
+
+
+@main_bp.route('/dashboard')
+@login_required
+def dashboard():
+    now = datetime.now()
+    bulan_ini = now.month
+    tahun_ini = now.year
+
+    bulan_lalu = now - relativedelta(months=1)
+    bulan_lalu_num = bulan_lalu.month
+    tahun_lalu = bulan_lalu.year
+
+    # Total clients sekarang dan bulan lalu
+    total_clients_now = Client.query.count()
+    # Misal kamu simpan tanggal daftar client di model Client dengan kolom created_at,
+    # kalau gak ada, kamu bisa hitung jumlah clients baru bulan ini
+    clients_bulan_ini = Client.query.filter(
+        func.extract('month', Client.created_at) == bulan_ini,
+        func.extract('year', Client.created_at) == tahun_ini
+    ).count()
+    clients_bulan_lalu = Client.query.filter(
+        func.extract('month', Client.created_at) == bulan_lalu_num,
+        func.extract('year', Client.created_at) == tahun_lalu
+    ).count()
+    # Persentase perubahan clients baru bulan ini dibanding bulan lalu
+    if clients_bulan_lalu == 0:
+        persentase_clients = 100 if clients_bulan_ini > 0 else 0
+    else:
+        persentase_clients = round((clients_bulan_ini - clients_bulan_lalu) / clients_bulan_lalu * 100, 2)
+
+    # Total keuntungan bulan ini dan bulan lalu
+    total_profit_now = db.session.query(
+        func.sum(WasteOilPurchase.jumlah * WasteOilPurchase.harga_per_liter)
+    ).filter(
+        func.extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_ini,
+        func.extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_ini
+    ).scalar() or 0
+
+    total_profit_lalu = db.session.query(
+        func.sum(WasteOilPurchase.jumlah * WasteOilPurchase.harga_per_liter)
+    ).filter(
+        func.extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_lalu_num,
+        func.extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_lalu
+    ).scalar() or 0
+
+    if total_profit_lalu == 0:
+        persentase_keuntungan = 100 if total_profit_now > 0 else 0
+    else:
+        persentase_keuntungan = round((total_profit_now - total_profit_lalu) / total_profit_lalu * 100, 2)
+
+    return render_template('volt_dashboard/dashboard.html',
+                           total_clients=total_clients_now,
+                           persentase_clients=persentase_clients,
+                           total_profit=total_profit_now,
+                           persentase_keuntungan=persentase_keuntungan)
