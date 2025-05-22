@@ -1,9 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, make_response, Response, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from app.models import User, WasteOilPurchase, SuratJalan, SuratJalanDetail, Client
+from app.models import User, WasteOilPurchase, SuratJalan, SuratJalanDetail, Client, OtherTransaction, HargaModalBulanan
 from app.extensions import db, login_manager
-from app.models import WasteOilPurchase
 from datetime import datetime
 import io 
 import pandas as pd
@@ -13,8 +12,9 @@ from sqlalchemy import extract, func
 import calendar
 from app.main.utils import generate_monthly_purchase_dataframe
 from io import BytesIO
-from app.main.forms import SuratJalanForm, SuratJalanDetailForm
+from app.main.forms import SuratJalanForm, SuratJalanDetailForm, OtherTransactionForm
 from dateutil.relativedelta import relativedelta
+
 
 
 
@@ -109,9 +109,6 @@ def edit(id):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-
 
 
 @main_bp.route('/hapus/<int:id>', methods=['POST'])
@@ -365,59 +362,118 @@ def print_surat_jalan(surat_jalan_id):
 
     return response
 
+@main_bp.route('/pengeluaran')
+def pengeluaran_index():
+    transaksi = OtherTransaction.query.order_by(OtherTransaction.tanggal.desc()).all()
+    return render_template('volt_dashboard/other_transaction/index.html', transaksi=transaksi)
+
+@main_bp.route('/pengeluaran-lainnya/tambah', methods=['GET', 'POST'])
+def pengeluaran_tambah():
+    form = OtherTransactionForm()
+    if form.validate_on_submit():
+        transaksi = OtherTransaction(
+            tanggal=form.tanggal.data,
+            keterangan=form.keterangan.data,
+            pemasukan=form.pemasukan.data or 0,
+            pengeluaran=form.pengeluaran.data or 0,
+            metode_pembayaran=form.metode_pembayaran.data
+        )
+        db.session.add(transaksi)
+        db.session.commit()
+        flash('Data pengeluaran lainnya berhasil ditambahkan.', 'success')
+        return redirect(url_for('main.pengeluaran_index'))
+    return render_template('volt_dashboard/other_transaction/pengeluaran_tambah.html', form=form, title="Tambah Pengeluaran Lainnya")
 
 
-@main_bp.route('/dashboard')
-@login_required
+@main_bp.route('/pengeluaran-lainnya/edit/<int:id>', methods=['GET', 'POST'])
+def pengeluaran_edit(id):
+    transaksi = OtherTransaction.query.get_or_404(id)
+    form = OtherTransactionForm(obj=transaksi)
+    if form.validate_on_submit():
+        transaksi.tanggal = form.tanggal.data
+        transaksi.keterangan = form.keterangan.data
+        transaksi.pemasukan = form.pemasukan.data or 0
+        transaksi.pengeluaran = form.pengeluaran.data or 0
+        transaksi.metode_pembayaran = form.metode_pembayaran.data
+        db.session.commit()
+        flash('Data pengeluaran lainnya berhasil diperbarui.', 'success')
+        return redirect(url_for('main.pengeluaran_index'))
+    return render_template('volt_dashboard/other_transaction/edit.html', form=form)
+
+
+@main_bp.route('/pengeluaran-lainnya/hapus/<int:id>', methods=['POST'])
+def pengeluaran_hapus(id):
+    transaksi = OtherTransaction.query.get_or_404(id)
+    db.session.delete(transaksi)
+    db.session.commit()
+    flash('Data pengeluaran lainnya berhasil dihapus.', 'success')
+    return redirect(url_for('main.pengeluaran_index'))
+
+
+@main_bp.route('/dashboard', methods=['GET'])
 def dashboard():
-    now = datetime.now()
-    bulan_ini = now.month
-    tahun_ini = now.year
+    selected_month = request.args.get('bulan')  # format '2025-05'
 
-    bulan_lalu = now - relativedelta(months=1)
-    bulan_lalu_num = bulan_lalu.month
-    tahun_lalu = bulan_lalu.year
+    if not selected_month:
+        selected_month = datetime.now().strftime('%Y-%m')  # default bulan ini
 
-    # Total clients sekarang dan bulan lalu
-    total_clients_now = Client.query.count()
-    # Misal kamu simpan tanggal daftar client di model Client dengan kolom created_at,
-    # kalau gak ada, kamu bisa hitung jumlah clients baru bulan ini
-    clients_bulan_ini = Client.query.filter(
-        func.extract('month', Client.created_at) == bulan_ini,
-        func.extract('year', Client.created_at) == tahun_ini
-    ).count()
-    clients_bulan_lalu = Client.query.filter(
-        func.extract('month', Client.created_at) == bulan_lalu_num,
-        func.extract('year', Client.created_at) == tahun_lalu
-    ).count()
-    # Persentase perubahan clients baru bulan ini dibanding bulan lalu
-    if clients_bulan_lalu == 0:
-        persentase_clients = 100 if clients_bulan_ini > 0 else 0
-    else:
-        persentase_clients = round((clients_bulan_ini - clients_bulan_lalu) / clients_bulan_lalu * 100, 2)
+    # Ambil harga modal bulan ini
+    harga_modal_entry = HargaModalBulanan.query.filter_by(bulan=selected_month).first()
+    harga_modal = harga_modal_entry.harga_modal if harga_modal_entry else 0
 
-    # Total keuntungan bulan ini dan bulan lalu
-    total_profit_now = db.session.query(
-        func.sum(WasteOilPurchase.jumlah * WasteOilPurchase.harga_per_liter)
+    # Ambil semua pembelian bulan ini
+    purchases = WasteOilPurchase.query.filter(
+        WasteOilPurchase.tanggal_pembelian.startswith(selected_month)
+    ).all()
+
+    total_quantity = sum(p.jumlah for p in purchases)
+    total_harga_beli = sum(p.total_harga for p in purchases)
+
+    # Ambil total pengeluaran lain
+    pengeluaran_lain = db.session.query(
+        db.func.sum(OtherTransaction.pengeluaran)
     ).filter(
-        func.extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_ini,
-        func.extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_ini
+        OtherTransaction.tanggal.startswith(selected_month)
     ).scalar() or 0
 
-    total_profit_lalu = db.session.query(
-        func.sum(WasteOilPurchase.jumlah * WasteOilPurchase.harga_per_liter)
-    ).filter(
-        func.extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_lalu_num,
-        func.extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_lalu
-    ).scalar() or 0
+    # 🔁 Konversi semuanya ke float agar tidak error saat dihitung
+    harga_modal = float(harga_modal)
+    total_quantity = float(total_quantity)
+    total_harga_beli = float(total_harga_beli)
+    pengeluaran_lain = float(pengeluaran_lain)
 
-    if total_profit_lalu == 0:
-        persentase_keuntungan = 100 if total_profit_now > 0 else 0
-    else:
-        persentase_keuntungan = round((total_profit_now - total_profit_lalu) / total_profit_lalu * 100, 2)
+    # Hitung total pengeluaran dan laba bersih
+    total_pengeluaran = total_harga_beli + pengeluaran_lain
+    laba_bersih = (harga_modal * total_quantity) - total_pengeluaran
+
+    total_clients = Client.query.count()
+    persentase_clients = 0  # Diisi 0 atau bisa dihapus dari HTML kalau tidak dipakai
+
 
     return render_template('volt_dashboard/dashboard.html',
-                           total_clients=total_clients_now,
-                           persentase_clients=persentase_clients,
-                           total_profit=total_profit_now,
-                           persentase_keuntungan=persentase_keuntungan)
+                           total_clients=total_clients,
+                           total_profit=laba_bersih,
+                           total_quantity=total_quantity,
+                           total_pengeluaran=total_pengeluaran,
+                           bulan_dipilih=selected_month,
+                           persentase_clients=persentase_clients)
+
+
+
+@main_bp.route('/harga-modal', methods=['POST'])
+def input_harga_modal():
+    bulan = request.form['bulan']  # Format: YYYY-MM
+    harga_modal = int(request.form['harga_modal'])
+
+    # Hapus harga modal lama jika ada
+    existing = HargaModalBulanan.query.filter_by(bulan=bulan).first()
+    if existing:
+        db.session.delete(existing)
+
+    # Simpan harga modal baru
+    new_modal = HargaModalBulanan(bulan=bulan, harga_modal=harga_modal)
+    db.session.add(new_modal)
+    db.session.commit()
+    flash('Harga modal berhasil diperbarui.', 'success')
+
+    return redirect(url_for('main.dashboard', bulan=bulan))

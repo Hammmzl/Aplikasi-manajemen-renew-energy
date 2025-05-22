@@ -12,11 +12,10 @@
     Export PDF (This Month)
   </a>
 </div>
-
-
   </div>
   <div class="card-body">
     {% if data %}
+    <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
@@ -42,6 +41,7 @@
     {% else %}
     <p>Belum ada data bulan ini.</p>
     {% endif %}
+  </div>
   </div>
 </div>
 {% endblock %}

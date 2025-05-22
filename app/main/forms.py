@@ -36,3 +36,13 @@ class SuratJalanForm(FlaskForm):
     penerima = StringField('Penerima', validators=[DataRequired()])
     submit = SubmitField('Simpan')
 
+
+class OtherTransactionForm(FlaskForm):
+    tanggal = DateField('Tanggal', format='%Y-%m-%d', validators=[DataRequired()])
+    keterangan = StringField('Keterangan', validators=[DataRequired()])
+    pemasukan = IntegerField('Pemasukan', default=0)
+    pengeluaran = IntegerField('Pengeluaran', default=0)
+    metode_pembayaran = SelectField('Metode Pembayaran', choices=[('cash', 'Cash'), ('transfer', 'Transfer')])
+    submit = SubmitField('Simpan')
+
+

@@ -8,28 +8,31 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-  >
-<div class="d-flex align-items-center ms-auto">
+    <!-- Sidebar Toggle Button (custom request) -->
+    <button class="btn btn-link text-white p-0 ms-2 d-lg-none" type="button" data-bs-toggle="collapse"
+      data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle sidebar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-  <!-- User Dropdown -->
-  <div class="nav-item dropdown ms-lg-3">
-    <a class="nav-link dropdown-toggle pt-1 px-0 d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      <img class="avatar rounded-circle" alt="Image placeholder"
-        src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}" height="40" width="40">
-      <span class="ms-2 d-none d-lg-block fw-bold text-gray-900">Hi, {{ current_user.username }}</span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end mt-2 py-1">
-      <li>
-        <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth.logout') }}">
-          <i class="fas fa-sign-out-alt me-2"></i> Logout
+    <div class="d-flex align-items-center ms-auto">
+      <!-- User Dropdown -->
+      <div class="nav-item dropdown ms-lg-3">
+        <a class="nav-link dropdown-toggle pt-1 px-0 d-flex align-items-center" href="#" role="button"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <img class="avatar rounded-circle" alt="Image placeholder"
+            src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}" height="40"
+            width="40">
+          <span class="ms-2 d-none d-lg-block fw-bold text-gray-900">Hi, {{ current_user.username }}</span>
         </a>
-      </li>
-    </ul>
-  </div>
-
-</div>
-
+        <ul class="dropdown-menu dropdown-menu-end mt-2 py-1">
+          <li>
+            <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth.logout') }}">
+              <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
   </div>
 </nav>
-

@@ -1,0 +1,50 @@
+{% extends 'volt_dashboard/layouts/base.html' %}
+{% block content %}
+<h1>Edit Pengeluaran Lainnya</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+        {{ form.tanggal.label(class="form-label") }}
+        {{ form.tanggal(class="form-control") }}
+        {% for error in form.tanggal.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.keterangan.label(class="form-label") }}
+        {{ form.keterangan(class="form-control") }}
+        {% for error in form.keterangan.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.pemasukan.label(class="form-label") }}
+        {{ form.pemasukan(class="form-control") }}
+        {% for error in form.pemasukan.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.pengeluaran.label(class="form-label") }}
+        {{ form.pengeluaran(class="form-control") }}
+        {% for error in form.pengeluaran.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-3">
+        {{ form.metode_pembayaran.label(class="form-label") }}
+        {{ form.metode_pembayaran(class="form-select") }}
+        {% for error in form.metode_pembayaran.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('main.pengeluaran_index') }}" class="btn btn-secondary">Batal</a>
+</form>
+{% endblock %}

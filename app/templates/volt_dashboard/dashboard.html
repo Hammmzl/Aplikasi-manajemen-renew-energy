@@ -4,32 +4,6 @@
 
 {% block content %}
 <div class="row">
- <!-- Total Pembelian -->
-
-
-
-  <!-- Clients -->
-<div class="col-12 col-sm-6 col-xl-3 mb-4">
-  <div class="card border-0 shadow">
-    <div class="card-body">
-      <div class="row d-flex align-items-center">
-        <div class="col">
-          <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
-          <h4 class="mb-0">{{ total_clients }}</h4>
-          <small class="text-success fw-bold">
-            +{{ persentase_clients }}%
-          </small>
-          <small class="text-muted"> Since last month</small>
-        </div>
-        <div class="col-auto">
-          <span class="icon icon-sm">
-            <i class="fas fa-users text-info"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- Clients -->
 <div class="col-12 col-sm-6 col-xl-3 mb-4">
   <div class="card border-0 shadow">
@@ -38,10 +12,7 @@
         <div class="col">
           <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
           <h4 class="mb-0">{{ total_clients }}</h4>
-          <small class="text-success fw-bold">
-            +{{ persentase_clients }}%
-          </small>
-          <small class="text-muted"> Since last month</small>
+          <small class="text-muted">Total Clients Saat ini</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
@@ -53,22 +24,19 @@
   </div>
 </div>
 
-<!-- Clients -->
+<!-- Total Quantity -->
 <div class="col-12 col-sm-6 col-xl-3 mb-4">
   <div class="card border-0 shadow">
     <div class="card-body">
       <div class="row d-flex align-items-center">
         <div class="col">
-          <h6 class="text-xs text-uppercase text-muted mb-1">Clients</h6>
-          <h4 class="mb-0">{{ total_clients }}</h4>
-          <small class="text-success fw-bold">
-            +{{ persentase_clients }}%
-          </small>
-          <small class="text-muted"> Since last month</small>
+          <h6 class="text-xs text-uppercase text-muted mb-1">Total Quantity</h6>
+          <h4 class="mb-0">{{ total_quantity }} L</h4>
+          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
-            <i class="fas fa-users text-info"></i>
+            <i class="fas fa-oil-can text-warning"></i>
           </span>
         </div>
       </div>
@@ -76,22 +44,39 @@
   </div>
 </div>
 
-<!-- Keuntungan -->
+<!-- Pengeluaran -->
 <div class="col-12 col-sm-6 col-xl-3 mb-4">
   <div class="card border-0 shadow">
     <div class="card-body">
       <div class="row d-flex align-items-center">
         <div class="col">
-          <h6 class="text-xs text-uppercase text-muted mb-1">Keuntungan</h6>
+          <h6 class="text-xs text-uppercase text-muted mb-1">Total Pengeluaran</h6>
+          <h4 class="mb-0">Rp {{ "{:,.0f}".format(total_pengeluaran) }}</h4>
+          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
+        </div>
+        <div class="col-auto">
+          <span class="icon icon-sm">
+            <i class="fas fa-wallet text-danger"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Laba Bersih -->
+<div class="col-12 col-sm-6 col-xl-3 mb-4">
+  <div class="card border-0 shadow">
+    <div class="card-body">
+      <div class="row d-flex align-items-center">
+        <div class="col">
+          <h6 class="text-xs text-uppercase text-muted mb-1">Laba Bersih</h6>
           <h4 class="mb-0">Rp {{ "{:,.0f}".format(total_profit) }}</h4>
-          <small class="text-success fw-bold">
-            +{{ persentase_keuntungan }}%
-          </small>
-          <small class="text-muted"> Since last month</small>
+          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
-            <i class="fas fa-dollar-sign text-success"></i>
+            <i class="fas fa-hand-holding-usd text-success"></i>
           </span>
         </div>
       </div>
@@ -102,6 +87,33 @@
 
   <!-- Kamu bisa lanjut tambahkan card lain di sini -->
 </div>
+
+<!-- Form Harga Modal -->
+<div class="card border-0 shadow mb-4">
+  <div class="card-header">
+    <h2 class="h5 mb-0">Hitung Laba Bersih</h2>
+  </div>
+  <div class="card-body">
+<form action="{{ url_for('main.input_harga_modal') }}" method="POST">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="bulan">Bulan</label>
+          <input class="form-control" id="bulan" name="bulan" type="month" required value="{{ bulan_dipilih }}">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="harga_modal">Harga Modal (Rp)</label>
+          <input class="form-control" id="harga_modal" name="harga_modal" type="number"placeholder="Contoh: 8000" required value="{{ harga_modal }}">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-primary" type="submit">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
 
 
 {% endblock %}

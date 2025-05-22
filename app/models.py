@@ -2,6 +2,8 @@ from app.extensions import db, login_manager
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from app import db
+from sqlalchemy import Numeric
 
 # User model
 class User(UserMixin, db.Model):
@@ -42,7 +44,7 @@ class WasteOilPurchase(db.Model):
     tanggal_pembelian = db.Column(db.Date, nullable=False)
     jumlah = db.Column(db.Float, nullable=False)
     harga_per_liter = db.Column(db.Integer, nullable=False)
-    total_harga = db.Column(db.Integer, nullable=False)
+    total_harga = db.Column(Numeric(12, 2), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
@@ -92,6 +94,26 @@ class SuratJalanDetail(db.Model):
     keterangan = db.Column(db.String(200))
 
 
+class OtherTransaction(db.Model):
+    __tablename__ = 'other_transactions'
 
+    id = db.Column(db.Integer, primary_key=True)
+    tanggal = db.Column(db.Date, nullable=False)
+    keterangan = db.Column(db.String(255), nullable=False)
+    pemasukan = db.Column(Numeric(12, 2), default=0)
+    pengeluaran = db.Column(Numeric(12, 2), default=0)
+    metode_pembayaran = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<OtherTransaction {self.tanggal} - {self.keterangan}>'
+    
+
+class HargaModalBulanan(db.Model):
+    __tablename__ = 'harga_modal_bulanan'
+    id = db.Column(db.Integer, primary_key=True)
+    bulan = db.Column(db.String(7), unique=True, nullable=False)  # '2025-05'
+    harga_modal = db.Column(Numeric(12, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
