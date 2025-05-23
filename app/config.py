@@ -1,4 +1,6 @@
+import os
+
 class Config:
-    SECRET_KEY = 'supersecretkey'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:19desember2000@localhost/minyak_jelantah_db'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'supersecretkey')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///fallback.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
