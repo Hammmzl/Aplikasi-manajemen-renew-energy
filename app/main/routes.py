@@ -465,15 +465,24 @@ def input_harga_modal():
     bulan = request.form['bulan']  # Format: YYYY-MM
     harga_modal = int(request.form['harga_modal'])
 
-    # Hapus harga modal lama jika ada
+    # Cek apakah sudah ada harga modal untuk bulan tersebut
     existing = HargaModalBulanan.query.filter_by(bulan=bulan).first()
-    if existing:
-        db.session.delete(existing)
 
-    # Simpan harga modal baru
-    new_modal = HargaModalBulanan(bulan=bulan, harga_modal=harga_modal)
-    db.session.add(new_modal)
+    if existing:
+        # Kalau ada → update
+        existing.harga_modal = harga_modal
+        existing.created_at = datetime.now()
+        flash(f'Harga modal untuk bulan {bulan} berhasil diperbarui.', 'success')
+    else:
+        # Kalau belum ada → insert baru
+        new_modal = HargaModalBulanan(
+            bulan=bulan,
+            harga_modal=harga_modal,
+            created_at=datetime.now()
+        )
+        db.session.add(new_modal)
+        flash(f'Harga modal untuk bulan {bulan} berhasil ditambahkan.', 'success')
+
     db.session.commit()
-    flash('Harga modal berhasil diperbarui.', 'success')
 
     return redirect(url_for('main.dashboard', bulan=bulan))
