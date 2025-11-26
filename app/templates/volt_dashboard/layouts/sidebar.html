@@ -35,7 +35,8 @@
     <ul class="nav flex-column pt-3 pt-md-0">
  <li class="nav-item">
   <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-    <i class="fas fa-chart-pie me-2"></i> Dashboard
+    <span class="sidebar-icon"><i class="fas fa-house"></i></span>
+      <span class="sidebar-text">Dashboard</span>
   </a>
 </li>
   {{ macros.sidebar_nav_item('main.index', 'fas fa-database', 'Data Pembelian') }}
@@ -50,15 +51,15 @@
 
       <li class="nav-item">
   <a href="{{ url_for('auth.user_list') }}" class="nav-link">
-    <i class="fas fa-users"></i>
-    <span>Data User</span>
+    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+      <span class="sidebar-text">Data user</span>
   </a>
 </li>
 
 <li class="nav-item">
   <a class="nav-link" href="{{ url_for('main.data_bulanan') }}">
-    <i class="fas fa-database"></i>
-    <span>Data Bulan Ini</span>
+    <span class="sidebar-icon"><i class="fas fa-database"></i></span>
+      <span class="sidebar-text">Data Bulan Ini</span>
   </a>
 </li>
 
@@ -85,6 +86,14 @@
   </a>
 </li>
 
+<li class="nav-item">
+  <a href="{{ url_for('main.pengeluaran_index') }}" class="nav-link">
+    <span class="sidebar-icon">
+      <i class="fa-solid fa-note-sticky"></i>
+    </span>
+    <span class="sidebar-text">Catatan</span>
+  </a>
+</li>
 
 
 

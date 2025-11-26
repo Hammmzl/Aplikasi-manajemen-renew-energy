@@ -429,7 +429,7 @@ def dashboard():
     total_quantity = sum(p.jumlah for p in purchases)
     total_harga_beli = sum(p.total_harga for p in purchases)
 
-    # Ambil total pengeluaran lain
+    # Ambil total pengeluaran lain note harus mengeluarakan nilai tanpa desimal
     pengeluaran_lain = db.session.query(
         db.func.sum(OtherTransaction.pengeluaran)
     ).filter(

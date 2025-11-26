@@ -1,14 +1,15 @@
 from flask import Flask
 from app.extensions import db, login_manager
-from app.main.routes import main_bp
 from flask_migrate import Migrate
+from dotenv import load_dotenv
 
+
+load_dotenv()  # <-- ini wajib buat load .env ke os.environ
 migrate = Migrate()
+
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:19desember2000@localhost/minyak_jelantah_db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config.from_object('app.config.Config')
 
     db.init_app(app)
