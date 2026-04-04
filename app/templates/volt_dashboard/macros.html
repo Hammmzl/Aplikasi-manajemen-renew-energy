@@ -4,7 +4,7 @@
      class="nav-link d-flex align-items-center {% if request.endpoint == endpoint %}active{% endif %}"
      {% if target %} target="{{ target }}" {% endif %}>
     <span class="sidebar-icon"><i class="{{ icon_class }}"></i></span>
-    <span class="mt-1 ms-1 sidebar-text">{{ label }}</span>
+    <span class="ms-1 sidebar-text">{{ label }}</span>
   </a>
 </li>
 {% endmacro %}

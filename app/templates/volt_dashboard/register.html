@@ -9,7 +9,13 @@
       <div class="card border-0 shadow p-4 my-5">
         <div class="text-center">
           <img src="{{ url_for('static', filename='volt_dashboard/assets/img/brand/light.svg') }}" height="50" class="mb-4" alt="Volt Logo">
-          <h3 class="mb-4">Buat Akun Baru</h3>
+          <h3 class="mb-4">
+            {% if public_registration_open %}
+              Buat Akun Admin Pertama
+            {% else %}
+              Tambah User Baru
+            {% endif %}
+          </h3>
         </div>
 
         <form method="POST">
@@ -35,15 +41,24 @@
             {{ form.confirm_password(class="form-control") }}
           </div>
 
+          {% if can_assign_role %}
+          <div class="form-group mb-3">
+            {{ form.role.label(class="form-label") }}
+            {{ form.role(class="form-select") }}
+          </div>
+          {% endif %}
+
           <div class="d-grid mb-3">
             {{ form.submit(class="btn btn-primary") }}
           </div>
         </form>
 
         <div class="text-center">
-          <small>
-            Sudah punya akun? <a href="{{ url_for('auth.login') }}">Login di sini</a>
-          </small>
+          {% if public_registration_open %}
+          <small>Sudah punya akun? <a href="{{ url_for('auth.login') }}">Login di sini</a></small>
+          {% else %}
+          <small><a href="{{ url_for('auth.user_list') }}">Kembali ke daftar user</a></small>
+          {% endif %}
         </div>
 
       </div>

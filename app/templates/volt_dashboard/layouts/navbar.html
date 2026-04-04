@@ -1,38 +1,58 @@
+{% set page_meta = {
+  'main.dashboard': {'title': 'Dashboard', 'subtitle': 'Ringkasan laba, volume, dan performa bulan berjalan.', 'icon': 'fas fa-chart-line'},
+  'main.index': {'title': 'Data Pembelian', 'subtitle': 'Pantau transaksi minyak jelantah secara cepat dan rapi.', 'icon': 'fas fa-database'},
+  'main.tambah_pembelian': {'title': 'Tambah Pembelian', 'subtitle': 'Input transaksi baru untuk operasional harian.', 'icon': 'fas fa-plus-circle'},
+  'main.edit': {'title': 'Edit Pembelian', 'subtitle': 'Perbarui detail transaksi tanpa kehilangan konteks data.', 'icon': 'fas fa-pen-to-square'},
+  'main.data_bulanan': {'title': 'Data All', 'subtitle': 'Rekap seluruh riwayat transaksi historis database.', 'icon': 'fas fa-archive'},
+  'main.pengeluaran_index': {'title': 'Pengeluaran Lainnya', 'subtitle': 'Catat arus kas di luar pembelian utama.', 'icon': 'fas fa-wallet'},
+  'main.pengeluaran_tambah': {'title': 'Tambah Pengeluaran', 'subtitle': 'Masukkan transaksi tambahan ke dalam pembukuan.', 'icon': 'fas fa-receipt'},
+  'main.pengeluaran_edit': {'title': 'Edit Pengeluaran', 'subtitle': 'Rapikan catatan transaksi lainnya dengan cepat.', 'icon': 'fas fa-file-pen'},
+  'client.client_index': {'title': 'Data Client', 'subtitle': 'Kelola daftar client dan detail kontak secara terpusat.', 'icon': 'fas fa-address-book'},
+  'client.client_tambah': {'title': 'Tambah Client', 'subtitle': 'Tambahkan relasi client baru ke sistem.', 'icon': 'fas fa-user-plus'},
+  'client.client_edit': {'title': 'Edit Client', 'subtitle': 'Perbarui profil client agar data tetap sinkron.', 'icon': 'fas fa-user-gear'},
+  'main.list_surat_jalan': {'title': 'Surat Jalan', 'subtitle': 'Monitor dokumen pengiriman dalam satu panel kerja.', 'icon': 'fas fa-truck-fast'},
+  'main.tambah_surat_jalan': {'title': 'Buat Surat Jalan', 'subtitle': 'Susun dokumen pengiriman dengan detail yang jelas.', 'icon': 'fas fa-file-circle-plus'},
+  'main.tambah_detail_barang': {'title': 'Detail Surat Jalan', 'subtitle': 'Lengkapi rincian barang agar dokumen siap dipakai.', 'icon': 'fas fa-box-open'},
+  'main.detail_surat_jalan': {'title': 'Detail Surat Jalan', 'subtitle': 'Tinjau isi dokumen pengiriman sebelum dicetak.', 'icon': 'fas fa-clipboard-list'},
+  'auth.user_list': {'title': 'Manajemen User', 'subtitle': 'Atur akun dan level akses admin maupun user.', 'icon': 'fas fa-users-cog'}
+} %}
+{% set current_page = page_meta.get(request.endpoint, {'title': 'Renew Energy Control Center', 'subtitle': 'Kelola operasional harian dari satu dashboard.', 'icon': 'fas fa-bolt'}) %}
+
 <nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">
   <div class="container-fluid px-0">
-
-    <!-- Sidebar Toggle (visible only on mobile) -->
-    <button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse"
-      data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
-      aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <!-- Sidebar Toggle Button (custom request) -->
-    <button class="btn btn-link text-white p-0 ms-2 d-lg-none" type="button" data-bs-toggle="collapse"
-      data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle sidebar">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="d-flex align-items-center ms-auto">
-      <!-- User Dropdown -->
-      <div class="nav-item dropdown ms-lg-3">
-        <a class="nav-link dropdown-toggle pt-1 px-0 d-flex align-items-center" href="#" role="button"
-          data-bs-toggle="dropdown" aria-expanded="false">
-          <img class="avatar rounded-circle" alt="Image placeholder"
-            src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}" height="40"
-            width="40">
-          <span class="ms-2 d-none d-lg-block fw-bold text-gray-900">Hi, {{ current_user.username }}</span>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end mt-2 py-1">
-          <li>
-            <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth.logout') }}">
-              <i class="fas fa-sign-out-alt me-2"></i> Logout
-            </a>
-          </li>
-        </ul>
+    <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+      <div class="d-flex align-items-center">
+        <button id="sidebar-toggle" class="sidebar-toggle d-md-none me-3 btn btn-icon-only d-none d-lg-none align-items-center justify-content-center" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle sidebar">
+            <svg class="toggle-icon" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
+        </button>
+        <!-- Page Title di Navbar (Opsional) -->
+        <h1 class="h4 mb-0 d-none d-md-inline-block text-gray-800">{{ current_page.title }}</h1>
       </div>
+      <!-- Navbar links -->
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item dropdown ms-lg-3">
+          <a class="nav-link dropdown-toggle pt-1 px-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="media d-flex align-items-center">
+              <img class="avatar rounded-circle" alt="Image placeholder" src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}">
+              <div class="media-body ms-2 text-dark align-items-center d-none d-lg-block">
+                <span class="mb-0 font-small fw-bold text-gray-900">{{ current_user.username }}</span>
+                <span class="badge {% if current_user.is_admin %}bg-danger{% else %}bg-info{% endif %} ms-1">
+                    {{ current_user.role|title }}
+                </span>
+              </div>
+            </div>
+          </a>
+          <div class="dropdown-menu dashboard-dropdown dropdown-menu-end mt-2 py-1">
+            <form action="{{ url_for('auth.logout') }}" method="POST" class="px-3 py-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="dropdown-item d-flex align-items-center">
+                <i class="fas fa-sign-out-alt text-danger me-2"></i>               
+                Logout
+              </button>
+            </form>
+          </div>
+        </li>
+      </ul>
     </div>
-
   </div>
 </nav>

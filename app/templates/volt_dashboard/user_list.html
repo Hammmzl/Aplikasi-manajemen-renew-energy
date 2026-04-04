@@ -1,7 +1,10 @@
 {% extends 'volt_dashboard/layouts/base.html' %}
 {% block content %}
 <div class="container mt-4">
-  <h4 class="mb-4">Daftar User</h4>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Daftar User</h4>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">+ Tambah User</a>
+  </div>
   <div class="card shadow">
     <div class="card-body">
       <table class="table table-striped table-hover">
@@ -10,6 +13,9 @@
             <th>#</th>
             <th>Username</th>
             <th>Email</th>
+            <th>Level</th>
+            <th>Dibuat</th>
+            <th>Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -18,6 +24,26 @@
             <td>{{ loop.index }}</td>
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
+            <td>
+              <span class="badge {% if user.is_admin %}bg-danger{% else %}bg-info{% endif %}">
+                {{ user.role|title }}
+              </span>
+            </td>
+            <td>{{ user.created_at.strftime('%d-%m-%Y') if user.created_at else '-' }}</td>
+            <td>
+              {% if user.id == current_user.id %}
+                <span class="text-muted small">Akun aktif saat ini</span>
+              {% else %}
+                <form action="{{ url_for('auth.update_user_role', user_id=user.id) }}" method="POST" class="d-flex gap-2 align-items-center">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select name="role" class="form-select form-select-sm">
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary">Simpan</button>
+                </form>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>

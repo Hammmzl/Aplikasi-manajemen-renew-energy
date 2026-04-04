@@ -1,107 +1,114 @@
 {% import 'volt_dashboard/macros.html' as macros %}
 
+{% set surat_jalan_endpoints = ['main.list_surat_jalan', 'main.tambah_surat_jalan', 'main.detail_surat_jalan', 'main.tambah_detail_barang', 'main.print_surat_jalan', 'main.hapus_detail'] %}
+{% set client_endpoints = ['client.client_index', 'client.client_tambah', 'client.client_edit', 'client.client_hapus'] %}
+{% set pengeluaran_endpoints = ['main.pengeluaran_index', 'main.pengeluaran_tambah', 'main.pengeluaran_edit', 'main.pengeluaran_hapus'] %}
 
 <nav id="sidebarMenu" class="sidebar d-lg-block bg-primary text-white collapse" data-simplebar>
-
   <div class="sidebar-inner px-4 pt-3">
+    <div class="sidebar-brand-panel d-none d-lg-flex">
+      <div class="sidebar-brand-mark">
+        <i class="fas fa-bolt"></i>
+      </div>
+      <div>
+        <span class="sidebar-brand-eyebrow">Control Center</span>
+        <h5 class="sidebar-brand-title">Renew Energy</h5>
+        <p class="sidebar-brand-subtitle">Satu panel kerja untuk pembelian, client, dokumen, dan keuangan.</p>
+      </div>
+    </div>
 
     <div class="user-card d-flex d-md-none align-items-center justify-content-between pt-4 pb-3">
-  <div class="d-flex align-items-center">
-    <div class="avatar-lg me-3">
-      <img src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}" class="card-img-top rounded-circle border-white" alt="user">
+      <div class="d-flex align-items-center">
+        <div class="avatar-lg me-3">
+          <img src="{{ url_for('static', filename='volt_dashboard/assets/img/team/profile-picture-3.jpg') }}" class="card-img-top rounded-circle border-white" alt="user">
+        </div>
+        <div>
+          <h6 class="mb-0">Hi, {{ current_user.username }}</h6>
+          <small class="text-white-50">{{ current_user.role|title }}</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center">
+        <form action="{{ url_for('auth.logout') }}" method="POST" class="me-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-gray-800 btn-icon-only btn-sm">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </form>
+        <a href="#sidebarMenu" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation" class="btn btn-outline-gray-800 btn-icon-only btn-sm">
+          <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </a>
+      </div>
     </div>
-    <div>
-      <h6 class="mb-0">Hi, {{ current_user.username }}</h6>
-    </div>
-  </div>
-  <div class="d-flex align-items-center">
-    <!-- Tombol Logout -->
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-gray-800 btn-icon-only btn-sm me-2">
-      <i class="fas fa-sign-out-alt"></i>
-    </a>
-    <!-- Tombol Close Sidebar -->
-    <a href="#sidebarMenu" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation" class="btn btn-outline-gray-800 btn-icon-only btn-sm">
-      <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;">
-        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-      </svg>
-    </a>
-  </div>
-</div>
 
-
-    
-
-    <!-- Nav items -->
-    <ul class="nav flex-column pt-3 pt-md-0">
- <li class="nav-item">
-  <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-    <span class="sidebar-icon"><i class="fas fa-house"></i></span>
-      <span class="sidebar-text">Dashboard</span>
-  </a>
-</li>
-  {{ macros.sidebar_nav_item('main.index', 'fas fa-database', 'Data Pembelian') }}
-  {{ macros.sidebar_nav_item('main.tambah_pembelian', 'fas fa-plus-circle', 'Tambah Data') }}
-  {{ macros.sidebar_nav_item('main.export_excel', 'fas fa-file-excel', 'Export Excel') }}
-  <li class="nav-item">
-        <a href="{{ url_for('main.cetak_pdf') }}" target="_blank" class="nav-link d-flex align-items-center">
-          <span class="sidebar-icon"><i class="fas fa-file-pdf"></i></span>
-          <span class="mt-1 ms-1 sidebar-text">Cetak PDF</span>
+    <ul class="nav flex-column pt-1 pt-md-0">
+      <li class="sidebar-section-label">Ringkasan</li>
+      <li class="nav-item">
+        <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+          <span class="sidebar-icon"><i class="fas fa-house"></i></span>
+          <span class="sidebar-text">Dashboard</span>
         </a>
       </li>
 
+      <li class="sidebar-section-label">Transaksi</li>
+      {{ macros.sidebar_nav_item('main.index', 'fas fa-database', 'Data Pembelian') }}
       <li class="nav-item">
-  <a href="{{ url_for('auth.user_list') }}" class="nav-link">
-    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
-      <span class="sidebar-text">Data user</span>
-  </a>
-</li>
+        <a href="{{ url_for('main.data_bulanan') }}" class="nav-link {% if request.endpoint == 'main.data_bulanan' %}active{% endif %}">
+          <span class="sidebar-icon"><i class="fas fa-archive"></i></span>
+          <span class="sidebar-text">Data All</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('main.pengeluaran_index') }}" class="nav-link {% if request.endpoint in pengeluaran_endpoints %}active{% endif %}">
+          <span class="sidebar-icon"><i class="fas fa-money-bill-wave"></i></span>
+          <span class="sidebar-text">Pengeluaran Lainnya</span>
+        </a>
+      </li>
 
-<li class="nav-item">
-  <a class="nav-link" href="{{ url_for('main.data_bulanan') }}">
-    <span class="sidebar-icon"><i class="fas fa-database"></i></span>
-      <span class="sidebar-text">Data Bulan Ini</span>
-  </a>
-</li>
+      <li class="sidebar-section-label">Dokumen</li>
+      <li class="nav-item">
+        <a href="{{ url_for('main.cetak_pdf') }}" target="_blank" class="nav-link d-flex align-items-center">
+          <span class="sidebar-icon"><i class="fas fa-file-pdf"></i></span>
+          <span class="ms-1 sidebar-text">Cetak PDF</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url_for('main.list_surat_jalan') }}" class="nav-link {% if request.endpoint in surat_jalan_endpoints %}active{% endif %}">
+          <span class="sidebar-icon"><i class="fas fa-truck"></i></span>
+          <span class="sidebar-text">Surat Jalan</span>
+        </a>
+      </li>
 
-<li class="nav-item">
-    <a href="{{ url_for('main.list_surat_jalan') }}" class="nav-link">
-      <span class="sidebar-icon"><i class="fas fa-truck"></i></span>
-      <span class="sidebar-text">Surat Jalan</span>
-    </a>
-  </li>
+      <li class="sidebar-section-label">Master Data</li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.endpoint in client_endpoints %}active{% endif %}" href="{{ url_for('client.client_index') }}">
+          <span class="sidebar-icon"><i class="fas fa-user"></i></span>
+          <span class="sidebar-text">Data Client</span>
+        </a>
+      </li>
 
-  <li class="nav-item">
-<a class="nav-link" href="{{ url_for('client.client_index') }}">
-  <span class="sidebar-icon"><i class="fas fa-user"></i></span>
-  <span class="sidebar-text">Data Client</span>
-</a>
-</li>
+      {% if current_user.is_admin %}
+      <li class="sidebar-section-label">Admin</li>
+      <li class="nav-item">
+        <a href="{{ url_for('auth.user_list') }}" class="nav-link {% if request.endpoint == 'auth.user_list' %}active{% endif %}">
+          <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+          <span class="sidebar-text">Data User</span>
+        </a>
+      </li>
+      {% endif %}
 
-<li class="nav-item">
-  <a href="{{ url_for('main.pengeluaran_index') }}" class="nav-link">
-    <span class="sidebar-icon">
-      <i class="fas fa-money-bill-wave"></i>
-    </span>
-    <span class="sidebar-text">Pengeluaran Lainnya</span>
-  </a>
-</li>
+      <li role="separator" class="dropdown-divider mt-3 mb-2 border-gray-300"></li>
 
-<li class="nav-item">
-  <a href="{{ url_for('main.pengeluaran_index') }}" class="nav-link">
-    <span class="sidebar-icon">
-      <i class="fa-solid fa-note-sticky"></i>
-    </span>
-    <span class="sidebar-text">Catatan</span>
-  </a>
-</li>
-
-
-
-
-  <li role="separator" class="dropdown-divider mt-3 mb-2 border-gray-300"></li>
-
-  {{ macros.sidebar_nav_item('auth.logout', 'fas fa-sign-out-alt text-danger', 'Logout') }}
-</ul>
-
+      <li class="nav-item">
+        <form action="{{ url_for('auth.logout') }}" method="POST" class="nav-link d-flex align-items-center">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="border-0 bg-transparent p-0 text-start d-flex align-items-center w-100 text-white">
+            <span class="sidebar-icon"><i class="fas fa-sign-out-alt text-danger"></i></span>
+            <span class="ms-1 sidebar-text">Logout</span>
+          </button>
+        </form>
+      </li>
+    </ul>
   </div>
 </nav>

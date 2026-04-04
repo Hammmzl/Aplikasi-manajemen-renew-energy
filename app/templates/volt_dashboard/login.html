@@ -29,11 +29,13 @@
           </div>
         </form>
 
+        {% if allow_registration %}
         <div class="text-center">
           <small>
             Belum punya akun? <a href="{{ url_for('auth.register') }}">Daftar Sekarang</a>
           </small>
         </div>
+        {% endif %}
 
       </div>
     </div>

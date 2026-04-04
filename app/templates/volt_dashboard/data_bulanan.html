@@ -1,47 +1,53 @@
 {% extends 'volt_dashboard/layouts/base.html' %}
 
+{% block title %}Data All{% endblock %}
+
 {% block content %}
-<div class="card">
-  <div class="card-header">
-    <h5>Purchase Data for {{ nama_bulan }} {{ tahun_ini }}</h5>
-    <div style="margin-bottom: 15px;">
-  <a href="{{ url_for('main.export_excel_bulanan') }}" class="btn btn-success">
-    Export Excel (This Month)
-  </a>
-  <a href="{{ url_for('main.export_pdf_bulanan') }}" class="btn btn-danger">
-    Export PDF (This Month)
-  </a>
-</div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+  <div class="d-block mb-4 mb-md-0">
+    <h2 class="h4">Seluruh Riwayat Transaksi Historis</h2>
+    <p class="mb-0">Daftar arsip penuh seluruh transaksi pembelian yang pernah dicatat oleh sistem.</p>
   </div>
-  <div class="card-body">
-    {% if data %}
-    <div class="table-responsive">
-    <table class="table table-striped">
-      <thead>
+  <div class="d-flex gap-2">
+    <!-- Tombol eksport global dicabut, dipindah ke per-baris tabel Laporan -->
+  </div>
+</div>
+
+<div class="card border-0 shadow mb-4">
+  <div class="table-responsive">
+    <table class="table align-middle table-nowrap mb-0">
+      <thead class="table-light">
         <tr>
-          <th>Nama Pengepul</th>
-          <th>Tanggal</th>
-          <th>Jumlah</th>
-          <th>Harga/Liter</th>
-          <th>Total Harga</th>
+          <th class="border-0 rounded-start">#</th>
+          <th class="border-0">Nama Laporan Tutup Buku</th>
+          <th class="border-0">Tanggal Ditutup</th>
+          <th class="border-0 rounded-end text-center">Unduh Laporan</th>
         </tr>
       </thead>
       <tbody>
-        {% for item in data %}
-        <tr>
-          <td>{{ item.client.nama_client }}</td>
-          <td>{{ item.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
-          <td>{{ item.jumlah }}</td>
-          <td>{{ item.harga_per_liter }}</td>
-          <td>{{ item.total_harga }}</td>
-        </tr>
-        {% endfor %}
+        {% if riwayat %}
+          {% for item in riwayat %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td class="fw-bold text-gray-800">Laporan {{ item.nama_periode }}</td>
+            <td>{{ item.tanggal_tutup.strftime('%d-%m-%Y %H:%M') }}</td>
+            <td class="text-center">
+              <a href="{{ url_for('main.export_excel_laporan', id=item.id) }}" class="btn btn-sm btn-success me-2" title="Unduh Excel">
+                <i class="fas fa-file-excel"></i> Excel
+              </a>
+              <a href="{{ url_for('main.export_pdf_laporan', id=item.id) }}" class="btn btn-sm btn-danger" title="Unduh PDF">
+                <i class="fas fa-file-pdf"></i> PDF
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">Belum ada riwayat laporak tutup buku yang diarsipkan.</td>
+          </tr>
+        {% endif %}
       </tbody>
     </table>
-    {% else %}
-    <p>Belum ada data bulan ini.</p>
-    {% endif %}
-  </div>
   </div>
 </div>
 {% endblock %}

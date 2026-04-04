@@ -53,7 +53,10 @@
         <td>{{ detail.jumlah }}</td>
         <td>{{ detail.keterangan }}</td>
         <td>
-        <a href="{{ url_for('main.hapus_detail', detail_id=detail.id, surat_jalan_id=surat_jalan.id) }}" class="btn btn-danger btn-sm">Hapus</a>
+          <form action="{{ url_for('main.hapus_detail', detail_id=detail.id, surat_jalan_id=surat_jalan.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus detail ini?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+          </form>
         </td>
       </tr>
       {% else %}

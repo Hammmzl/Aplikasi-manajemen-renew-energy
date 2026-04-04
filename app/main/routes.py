@@ -1,64 +1,81 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, make_response, Response, abort
-from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import check_password_hash
-from app.models import User, WasteOilPurchase, SuratJalan, SuratJalanDetail, Client, OtherTransaction, HargaModalBulanan
-from app.extensions import db, login_manager
-from datetime import datetime
-import io 
-import pandas as pd
-from weasyprint import HTML
-from .forms import WasteOilPurchaseForm
-from sqlalchemy import extract, func
 import calendar
-from app.main.utils import generate_monthly_purchase_dataframe
+import io
+from datetime import datetime
 from io import BytesIO
-from app.main.forms import SuratJalanForm, SuratJalanDetailForm, OtherTransactionForm
-from dateutil.relativedelta import relativedelta
+
+import pandas as pd
+from flask import abort, flash, make_response, redirect, render_template, request, send_file, url_for
+from flask_login import current_user, login_required
+from weasyprint import HTML
+
+from app.extensions import db
+from app.main import main_bp
+from app.main.forms import OtherTransactionForm, SuratJalanDetailForm, SuratJalanForm, WasteOilPurchaseForm
+from app.main.utils import build_month_window, format_quantity
+from app.models import Client, HargaModalBulanan, OtherTransaction, SuratJalan, SuratJalanDetail, WasteOilPurchase
 
 
+def _apply_purchase_filters(query, search_query='', date_filter=''):
+    if search_query:
+        query = query.join(Client).filter(Client.nama_client.ilike(f'%{search_query}%'))
+
+    if date_filter:
+        try:
+            selected_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = None
+
+        if selected_date:
+            query = query.filter(WasteOilPurchase.tanggal_pembelian == selected_date)
+
+    return query
 
 
-main_bp = Blueprint('main', __name__, template_folder='templates/volt_dashboard')
+def _normalize_year_month(value):
+    if not value:
+        return datetime.now().strftime('%Y-%m')
+
+    try:
+        datetime.strptime(value, '%Y-%m')
+        return value
+    except ValueError:
+        return datetime.now().strftime('%Y-%m')
 
 
 @main_bp.route('/')
 @login_required
 def index():
-    # Ambil parameter filter dan pagination dari query string
     page = request.args.get('page', 1, type=int)
     per_page = 10
     search_query = request.args.get('search', '').strip()
     date_filter = request.args.get('date', '').strip()
 
-    # Mulai query dasar
-    query = WasteOilPurchase.query
+    query = WasteOilPurchase.query.filter_by(is_closed=False)
+    query = _apply_purchase_filters(query, search_query=search_query, date_filter=date_filter)
 
-    # Filter nama pengepul kalau ada input search
-    if search_query:
-        query = query.filter(WasteOilPurchase.nama_pengepul.ilike(f'%{search_query}%'))
-
-    # Filter tanggal pembelian kalau ada input date
-    if date_filter:
-        query = query.filter(WasteOilPurchase.tanggal_pembelian == date_filter)
-
-    # Paginate hasil query
-    pagination = query.order_by(WasteOilPurchase.tanggal_pembelian.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = query.order_by(WasteOilPurchase.tanggal_pembelian.desc()).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
     purchases = pagination.items
 
-    return render_template('volt_dashboard/index.html',
-                           purchases=purchases,
-                           page=page,
-                           total_pages=pagination.pages,
-                           total_data=pagination.total,
-                           search_query=search_query,
-                           date_filter=date_filter)
-
+    return render_template(
+        'volt_dashboard/index.html',
+        purchases=purchases,
+        page=page,
+        total_pages=pagination.pages,
+        total_data=pagination.total,
+        search_query=search_query,
+        date_filter=date_filter,
+    )
 
 
 @main_bp.route('/tambah_pembelian', methods=['GET', 'POST'])
+@login_required
 def tambah_pembelian():
     form = WasteOilPurchaseForm()
-    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.all()]
+    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.order_by(Client.nama_client).all()]
 
     if form.validate_on_submit():
         pembelian = WasteOilPurchase(
@@ -66,9 +83,10 @@ def tambah_pembelian():
             tanggal_pembelian=form.tanggal_pembelian.data,
             jumlah=form.jumlah.data,
             harga_per_liter=form.harga_per_liter.data,
-            total_harga=form.jumlah.data * form.harga_per_liter.data,
-            user_id=current_user.id  # kalau kamu pakai flask-login
+            total_harga=0,
+            user_id=current_user.id,
         )
+        pembelian.calculate_total()
         db.session.add(pembelian)
         db.session.commit()
         flash('Data pembelian berhasil ditambahkan.', 'success')
@@ -78,24 +96,22 @@ def tambah_pembelian():
 
 
 @main_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit(id):
     purchase = WasteOilPurchase.query.get_or_404(id)
     form = WasteOilPurchaseForm()
-
-    # isi pilihan client
-    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.all()]
+    form.client_id.choices = [(client.id, client.nama_client) for client in Client.query.order_by(Client.nama_client).all()]
 
     if form.validate_on_submit():
         purchase.client_id = form.client_id.data
         purchase.tanggal_pembelian = form.tanggal_pembelian.data
         purchase.jumlah = float(form.jumlah.data)
         purchase.harga_per_liter = float(form.harga_per_liter.data)
-        purchase.total_harga = purchase.jumlah * purchase.harga_per_liter
+        purchase.calculate_total()
         db.session.commit()
         flash('Data pembelian berhasil diperbarui', 'success')
         return redirect(url_for('main.index'))
 
-    # isi data lama ke form waktu GET
     form.client_id.data = purchase.client_id
     form.tanggal_pembelian.data = purchase.tanggal_pembelian
     form.jumlah.data = purchase.jumlah
@@ -104,14 +120,8 @@ def edit(id):
     return render_template('volt_dashboard/edit.html', form=form, purchase=purchase)
 
 
-
-# Flask-Login user loader
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
 @main_bp.route('/hapus/<int:id>', methods=['POST'])
+@login_required
 def hapus(id):
     purchase = WasteOilPurchase.query.get_or_404(id)
     db.session.delete(purchase)
@@ -119,19 +129,23 @@ def hapus(id):
     flash('Data berhasil dihapus', 'success')
     return redirect(url_for('main.index'))
 
+
 @main_bp.route('/export_excel')
+@login_required
 def export_excel():
     purchases = WasteOilPurchase.query.order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
 
     data = []
-    for p in purchases:
-        data.append({
-            'Nama Pengepul': p.client.nama_client if p.client else '-', 
-            'Tanggal Pembelian': p.tanggal_pembelian.strftime('%d-%m-%Y'),
-            'Jumlah (Liter)': p.jumlah,
-            'Harga per Liter (Rp)': p.harga_per_liter,
-            'Total Harga (Rp)': p.jumlah * p.harga_per_liter
-        })
+    for purchase in purchases:
+        data.append(
+            {
+                'Nama Pengepul': purchase.client.nama_client if purchase.client else '-',
+                'Tanggal Pembelian': purchase.tanggal_pembelian.strftime('%d-%m-%Y'),
+                'Jumlah (Liter)': purchase.jumlah,
+                'Harga per Liter (Rp)': purchase.harga_per_liter,
+                'Total Harga (Rp)': purchase.total_harga,
+            }
+        )
 
     df = pd.DataFrame(data)
 
@@ -145,23 +159,26 @@ def export_excel():
 
 
 @main_bp.route('/cetak_pdf')
+@login_required
 def cetak_pdf():
-    search_query = request.args.get('search', '', type=str)
-    date_filter = request.args.get('date', '', type=str)
+    search_query = request.args.get('search', '', type=str).strip()
+    date_filter = request.args.get('date', '', type=str).strip()
 
     query = WasteOilPurchase.query
-    if search_query:
-        query = query.filter(WasteOilPurchase.nama_pengepul.ilike(f'%{search_query}%'))
-    if date_filter:
-        query = query.filter(WasteOilPurchase.tanggal_pembelian == date_filter)
-
+    query = _apply_purchase_filters(query, search_query=search_query, date_filter=date_filter)
     purchases = query.order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
 
-    rendered = render_template('volt_dashboard/pdf_template.html',
-                               purchases=purchases,
-                               generated_at=datetime.now().strftime('%d-%m-%Y %H:%M:%S'))
+    rendered = render_template(
+        'volt_dashboard/pdf_template.html',
+        purchases=purchases,
+        generated_at=datetime.now().strftime('%d-%m-%Y %H:%M:%S'),
+    )
 
-    pdf = HTML(string=rendered).write_pdf()
+    try:
+        pdf = HTML(string=rendered).write_pdf()
+    except Exception as e:
+        flash(f'Gagal membuat PDF: {str(e)}', 'danger')
+        return redirect(url_for('main.index'))
 
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
@@ -169,102 +186,112 @@ def cetak_pdf():
     return response
 
 
-
-
-@main_bp.route('/data-bulanan')
+@main_bp.route('/data-all')
 @login_required
 def data_bulanan():
-    bulan_ini = datetime.now().month
-    tahun_ini = datetime.now().year
-    nama_bulan = calendar.month_name[bulan_ini]
+    from app.models import TutupBukuHistory
+    riwayat = TutupBukuHistory.query.order_by(TutupBukuHistory.tanggal_tutup.desc()).all()
 
-    data_bulanan = WasteOilPurchase.query.filter(
-        extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_ini,
-        extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_ini
-    ).order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
-
-    return render_template('volt_dashboard/data_bulanan.html', data=data_bulanan,nama_bulan=nama_bulan,
-        tahun_ini=tahun_ini)
+    return render_template(
+        'volt_dashboard/data_bulanan.html',
+        riwayat=riwayat,
+    )
 
 
-@main_bp.route('/export_excel_bulanan')
+@main_bp.route('/export_excel_laporan/<int:id>')
 @login_required
-def export_excel_bulanan():
-    from datetime import datetime, date, timedelta
+def export_excel_laporan(id):
+    from app.models import TutupBukuHistory
+    history = TutupBukuHistory.query.get_or_404(id)
+    purchases = WasteOilPurchase.query.filter_by(tutup_buku_id=id).order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
 
-    # Hitung awal dan akhir bulan sekarang
-    today = date.today()
-    awal_bulan = today.replace(day=1)
-    if today.month == 12:
-        akhir_bulan = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
-    else:
-        akhir_bulan = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
-
-    # Ambil data pembelian bulan ini
-    purchases = WasteOilPurchase.query\
-        .filter(WasteOilPurchase.tanggal_pembelian >= awal_bulan)\
-        .filter(WasteOilPurchase.tanggal_pembelian <= akhir_bulan)\
-        .order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
-
-    # Siapkan data buat ke DataFrame
     data = []
-    for p in purchases:
-        data.append({
-            'Nama Pengepul': p.client.nama_client if p.client else '-',
-            'Tanggal Pembelian': p.tanggal_pembelian.strftime('%d-%m-%Y'),
-            'Jumlah (Liter)': p.jumlah,
-            'Harga per Liter (Rp)': p.harga_per_liter,
-            'Total Harga (Rp)': p.jumlah * p.harga_per_liter
-        })
+    for i, purchase in enumerate(purchases, 1):
+        data.append(
+            {
+                'No': i,
+                'Nama Pengepul': purchase.client.nama_client if purchase.client else '-',
+                'Tanggal Pembelian': purchase.tanggal_pembelian.strftime('%d %b %Y'),
+                'Jumlah (Liter)': float(purchase.jumlah),
+                'Harga per Liter (Rp)': float(purchase.harga_per_liter),
+                'Total Harga (Rp)': float(purchase.total_harga),
+            }
+        )
 
-    # Convert ke DataFrame
     df = pd.DataFrame(data)
 
-    # Simpan ke file Excel di memory
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Pembelian Bulanan')
+        df.to_excel(writer, index=False, sheet_name='Laporan Keuangan', startrow=4)
+        workbook  = writer.book
+        worksheet = writer.sheets['Laporan Keuangan']
+
+        title_format = workbook.add_format({'bold': True, 'font_size': 16, 'align': 'center', 'valign': 'vcenter'})
+        subtitle_format = workbook.add_format({'bold': True, 'font_size': 12, 'align': 'center', 'valign': 'vcenter'})
+        header_format = workbook.add_format({'bold': True, 'bg_color': '#1F2937', 'font_color': 'white', 'border': 1, 'align': 'center'})
+        money_format = workbook.add_format({'num_format': 'Rp #,##0', 'border': 1})
+        float_format = workbook.add_format({'num_format': '#,##0.00', 'border': 1, 'align': 'center'})
+        border_format = workbook.add_format({'border': 1})
+        center_format = workbook.add_format({'border': 1, 'align': 'center'})
+
+        worksheet.merge_range('A1:F2', 'LAPORAN REKAPITULASI PEMBELIAN MINYAK JELANTAH', title_format)
+        worksheet.merge_range('A3:F3', f'Periode Keuangan: Laporan {history.nama_periode}', subtitle_format)
+
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(4, col_num, value, header_format)
+
+        worksheet.set_column('A:A', 5)
+        worksheet.set_column('B:B', 30)
+        worksheet.set_column('C:C', 20)
+        worksheet.set_column('D:D', 18)
+        worksheet.set_column('E:E', 22)
+        worksheet.set_column('F:F', 22)
+
+        for row_num in range(5, 5 + len(df)):
+            worksheet.write(row_num, 0, df.iloc[row_num-5, 0], center_format)
+            worksheet.write(row_num, 1, df.iloc[row_num-5, 1], border_format)
+            worksheet.write(row_num, 2, df.iloc[row_num-5, 2], center_format)
+            worksheet.write(row_num, 3, df.iloc[row_num-5, 3], float_format)
+            worksheet.write(row_num, 4, df.iloc[row_num-5, 4], money_format)
+            worksheet.write(row_num, 5, df.iloc[row_num-5, 5], money_format)
+
     output.seek(0)
+    nama_file = f'Laporan_{history.nama_periode.replace(" ", "_")}.xlsx'
 
-    # Format nama file pakai bulan dan tahun sekarang
-    bulan_ini_str = datetime.now().strftime('%B %Y')
-    nama_file = f"Data Pembelian {bulan_ini_str}.xlsx"
+    return send_file(
+        output,
+        download_name=nama_file,
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
 
-    # Buat response buat download
-    return send_file(output,
-                     download_name=nama_file,
-                     as_attachment=True,
-                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-@main_bp.route('/export-pdf-bulanan')
+@main_bp.route('/export_pdf_laporan/<int:id>')
 @login_required
-def export_pdf_bulanan():
-    bulan_ini = datetime.now().month
-    tahun_ini = datetime.now().year
-    data = WasteOilPurchase.query.filter(
-        db.extract('month', WasteOilPurchase.tanggal_pembelian) == bulan_ini,
-        db.extract('year', WasteOilPurchase.tanggal_pembelian) == tahun_ini
-    ).all()
+def export_pdf_laporan(id):
+    from app.models import TutupBukuHistory
+    history = TutupBukuHistory.query.get_or_404(id)
+    data = WasteOilPurchase.query.filter_by(tutup_buku_id=id).order_by(WasteOilPurchase.tanggal_pembelian.desc()).all()
 
-    total_harga = sum([d.total_harga for d in data])
+    total_harga = sum((item.total_harga or 0) for item in data)
 
-    # Render template HTML
     rendered = render_template(
         'volt_dashboard/pdf_template_bulanan.html',
         data=data,
         total_harga=total_harga,
-        bulan=datetime.now().strftime("%B %Y")
+        bulan=history.nama_periode,
     )
 
-    # Convert ke PDF via WeasyPrint
-    pdf_file = io.BytesIO()
-    HTML(string=rendered).write_pdf(pdf_file)
-    pdf_file.seek(0)
+    try:
+        pdf_file = io.BytesIO()
+        HTML(string=rendered).write_pdf(pdf_file)
+        pdf_file.seek(0)
+    except Exception as e:
+        flash(f'Gagal membuat PDF: {str(e)}', 'danger')
+        return redirect(url_for('main.data_bulanan'))
 
-    # Buat nama file
-    filename = f"Data_Pembelian_{datetime.now().strftime('%B_%Y')}.pdf"
+    filename = f'Laporan_{history.nama_periode.replace(" ", "_")}.pdf'
 
-    # Kirim response
     response = make_response(pdf_file.read())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
@@ -272,12 +299,14 @@ def export_pdf_bulanan():
 
 
 @main_bp.route('/surat-jalan')
+@login_required
 def list_surat_jalan():
     surat_list = SuratJalan.query.order_by(SuratJalan.tanggal.desc()).all()
     return render_template('volt_dashboard/surat_jalan/list.html', surat_list=surat_list)
 
 
 @main_bp.route('/surat-jalan/tambah', methods=['GET', 'POST'])
+@login_required
 def tambah_surat_jalan():
     form = SuratJalanForm()
     if form.validate_on_submit():
@@ -288,33 +317,29 @@ def tambah_surat_jalan():
             tujuan=form.tujuan.data,
             owner=form.owner.data,
             supir=form.supir.data,
-            penerima=form.penerima.data
+            penerima=form.penerima.data,
         )
         db.session.add(surat_jalan)
         db.session.commit()
-        print('ID Surat Jalan:', surat_jalan.id)  # debug id muncul gak?
         flash('Surat Jalan berhasil disimpan!', 'success')
         return redirect(url_for('main.tambah_detail_barang', surat_jalan_id=surat_jalan.id))
-    else:
-        if request.method == 'POST':
-            print("Form NOT valid")
-            print(form.errors)
+
     return render_template('volt_dashboard/surat_jalan/tambah.html', form=form)
 
-    
 
 @main_bp.route('/surat-jalan/<int:surat_jalan_id>/tambah_detail', methods=['GET', 'POST'])
+@login_required
 def tambah_detail_barang(surat_jalan_id):
     surat_jalan = SuratJalan.query.get_or_404(surat_jalan_id)
     form = SuratJalanDetailForm()
-    details = SuratJalanDetail.query.filter_by(surat_jalan_id=surat_jalan_id).all()  # ⬅️ ini
+    details = SuratJalanDetail.query.filter_by(surat_jalan_id=surat_jalan_id).all()
 
     if form.validate_on_submit():
         detail = SuratJalanDetail(
             surat_jalan_id=surat_jalan_id,
             nama_barang=form.nama_barang.data,
             jumlah=form.jumlah.data,
-            keterangan=form.keterangan.data
+            keterangan=form.keterangan.data,
         )
         db.session.add(detail)
         db.session.commit()
@@ -325,11 +350,12 @@ def tambah_detail_barang(surat_jalan_id):
         'volt_dashboard/surat_jalan/tambah_detail.html',
         form=form,
         surat_jalan=surat_jalan,
-        details=details 
+        details=details,
     )
 
 
-@main_bp.route('/surat_jalan/<int:surat_jalan_id>/hapus_detail/<int:detail_id>', methods=['POST', 'GET'])
+@main_bp.route('/surat-jalan/<int:surat_jalan_id>/hapus-detail/<int:detail_id>', methods=['POST'])
+@login_required
 def hapus_detail(surat_jalan_id, detail_id):
     detail = SuratJalanDetail.query.get_or_404(detail_id)
     db.session.delete(detail)
@@ -337,37 +363,46 @@ def hapus_detail(surat_jalan_id, detail_id):
     flash('Detail barang berhasil dihapus.', 'success')
     return redirect(url_for('main.tambah_detail_barang', surat_jalan_id=surat_jalan_id))
 
+
 @main_bp.route('/surat-jalan/<int:surat_jalan_id>')
+@login_required
 def detail_surat_jalan(surat_jalan_id):
     surat_jalan = SuratJalan.query.get(surat_jalan_id)
     if not surat_jalan:
         abort(404)
     return render_template('volt_dashboard/surat_jalan/detail.html', surat_jalan=surat_jalan)
 
+
 @main_bp.route('/surat-jalan/<int:surat_jalan_id>/print')
+@login_required
 def print_surat_jalan(surat_jalan_id):
     surat_jalan = SuratJalan.query.get_or_404(surat_jalan_id)
 
-    # Render template ke HTML string
     rendered = render_template('volt_dashboard/surat_jalan/print.html', surat_jalan=surat_jalan)
 
-    # Generate PDF dari HTML
-    pdf = HTML(string=rendered, base_url=request.base_url).write_pdf()
+    try:
+        pdf = HTML(string=rendered, base_url=request.base_url).write_pdf()
+    except Exception as e:
+        flash(f'Gagal membuat PDF: {str(e)}', 'danger')
+        return redirect(url_for('main.list_surat_jalan'))
 
-    # Buat response PDF
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
-    filename = f"SuratJalan_{surat_jalan.nomor}.pdf"
+    filename = f'SuratJalan_{surat_jalan.nomor}.pdf'
     response.headers['Content-Disposition'] = f'inline; filename={filename}'
 
     return response
 
+
 @main_bp.route('/pengeluaran')
+@login_required
 def pengeluaran_index():
-    transaksi = OtherTransaction.query.order_by(OtherTransaction.tanggal.desc()).all()
+    transaksi = OtherTransaction.query.filter_by(is_closed=False).order_by(OtherTransaction.tanggal.desc()).all()
     return render_template('volt_dashboard/other_transaction/index.html', transaksi=transaksi)
 
+
 @main_bp.route('/pengeluaran-lainnya/tambah', methods=['GET', 'POST'])
+@login_required
 def pengeluaran_tambah():
     form = OtherTransactionForm()
     if form.validate_on_submit():
@@ -376,16 +411,17 @@ def pengeluaran_tambah():
             keterangan=form.keterangan.data,
             pemasukan=form.pemasukan.data or 0,
             pengeluaran=form.pengeluaran.data or 0,
-            metode_pembayaran=form.metode_pembayaran.data
+            metode_pembayaran=form.metode_pembayaran.data,
         )
         db.session.add(transaksi)
         db.session.commit()
         flash('Data pengeluaran lainnya berhasil ditambahkan.', 'success')
         return redirect(url_for('main.pengeluaran_index'))
-    return render_template('volt_dashboard/other_transaction/pengeluaran_tambah.html', form=form, title="Tambah Pengeluaran Lainnya")
+    return render_template('volt_dashboard/other_transaction/pengeluaran_tambah.html', form=form, title='Tambah Pengeluaran Lainnya')
 
 
 @main_bp.route('/pengeluaran-lainnya/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def pengeluaran_edit(id):
     transaksi = OtherTransaction.query.get_or_404(id)
     form = OtherTransactionForm(obj=transaksi)
@@ -402,6 +438,7 @@ def pengeluaran_edit(id):
 
 
 @main_bp.route('/pengeluaran-lainnya/hapus/<int:id>', methods=['POST'])
+@login_required
 def pengeluaran_hapus(id):
     transaksi = OtherTransaction.query.get_or_404(id)
     db.session.delete(transaksi)
@@ -410,79 +447,90 @@ def pengeluaran_hapus(id):
     return redirect(url_for('main.pengeluaran_index'))
 
 
+@main_bp.route('/tutup-buku', methods=['POST'])
+@login_required
+def tutup_buku():
+    from app.models import TutupBukuHistory
+    months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    now = datetime.now()
+    base_name = f"{months[now.month-1]} {now.year}"
+    
+    existing_count = TutupBukuHistory.query.filter(TutupBukuHistory.nama_periode.like(f"{base_name}%")).count()
+    if existing_count > 0:
+        nama_periode = f"{base_name} ({existing_count + 1})"
+    else:
+        nama_periode = base_name
+
+    history = TutupBukuHistory(nama_periode=nama_periode)
+    db.session.add(history)
+    db.session.flush()
+
+    WasteOilPurchase.query.filter_by(is_closed=False).update(dict(is_closed=True, tutup_buku_id=history.id))
+    OtherTransaction.query.filter_by(is_closed=False).update(dict(is_closed=True, tutup_buku_id=history.id))
+    db.session.commit()
+    flash(f'Buku keuangan berhasil ditutup sebagai laporan "{nama_periode}".', 'success')
+    return redirect(url_for('main.index'))
+
+
 @main_bp.route('/dashboard', methods=['GET'])
+@login_required
 def dashboard():
-    selected_month = request.args.get('bulan')  # format '2025-05'
-
-    if not selected_month:
-        selected_month = datetime.now().strftime('%Y-%m')  # default bulan ini
-
-    # Ambil harga modal bulan ini
-    harga_modal_entry = HargaModalBulanan.query.filter_by(bulan=selected_month).first()
+    harga_modal_entry = HargaModalBulanan.query.filter_by(bulan='current').first()
     harga_modal = harga_modal_entry.harga_modal if harga_modal_entry else 0
 
-    # Ambil semua pembelian bulan ini
-    purchases = WasteOilPurchase.query.filter(
-        WasteOilPurchase.tanggal_pembelian.startswith(selected_month)
-    ).all()
+    purchases = WasteOilPurchase.query.filter_by(is_closed=False).all()
+    total_quantity = sum((purchase.jumlah or 0) for purchase in purchases)
+    total_harga_beli = sum((purchase.total_harga or 0) for purchase in purchases)
 
-    total_quantity = sum(p.jumlah for p in purchases)
-    total_harga_beli = sum(p.total_harga for p in purchases)
-
-    # Ambil total pengeluaran lain note harus mengeluarakan nilai tanpa desimal
     pengeluaran_lain = db.session.query(
         db.func.sum(OtherTransaction.pengeluaran)
-    ).filter(
-        OtherTransaction.tanggal.startswith(selected_month)
-    ).scalar() or 0
+    ).filter_by(is_closed=False).scalar() or 0
 
-    # 🔁 Konversi semuanya ke float agar tidak error saat dihitung
     harga_modal = float(harga_modal)
     total_quantity = float(total_quantity)
     total_harga_beli = float(total_harga_beli)
     pengeluaran_lain = float(pengeluaran_lain)
 
-    # Hitung total pengeluaran dan laba bersih
     total_pengeluaran = total_harga_beli + pengeluaran_lain
     laba_bersih = (harga_modal * total_quantity) - total_pengeluaran
-
     total_clients = Client.query.count()
-    persentase_clients = 0  # Diisi 0 atau bisa dihapus dari HTML kalau tidak dipakai
 
-
-    return render_template('volt_dashboard/dashboard.html',
-                           total_clients=total_clients,
-                           total_profit=laba_bersih,
-                           total_quantity=total_quantity,
-                           total_pengeluaran=total_pengeluaran,
-                           bulan_dipilih=selected_month,
-                           persentase_clients=persentase_clients)
-
+    return render_template(
+        'volt_dashboard/dashboard.html',
+        total_clients=total_clients,
+        total_profit=laba_bersih,
+        total_quantity=total_quantity,
+        total_quantity_display=format_quantity(total_quantity),
+        total_pengeluaran=total_pengeluaran,
+        harga_modal=harga_modal,
+        persentase_clients=0,
+    )
 
 
 @main_bp.route('/harga-modal', methods=['POST'])
+@login_required
 def input_harga_modal():
-    bulan = request.form['bulan']  # Format: YYYY-MM
-    harga_modal = int(request.form['harga_modal'])
+    try:
+        harga_modal = float(request.form['harga_modal'])
+    except (KeyError, ValueError):
+        flash('Harga jual tidak valid.', 'danger')
+        return redirect(url_for('main.dashboard'))
 
-    # Cek apakah sudah ada harga modal untuk bulan tersebut
-    existing = HargaModalBulanan.query.filter_by(bulan=bulan).first()
+    existing = HargaModalBulanan.query.filter_by(bulan='current').first()
 
     if existing:
-        # Kalau ada → update
         existing.harga_modal = harga_modal
         existing.created_at = datetime.now()
-        flash(f'Harga modal untuk bulan {bulan} berhasil diperbarui.', 'success')
+        flash('Harga jual saat ini berhasil diperbarui.', 'success')
     else:
-        # Kalau belum ada → insert baru
         new_modal = HargaModalBulanan(
-            bulan=bulan,
+            bulan='current',
             harga_modal=harga_modal,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         db.session.add(new_modal)
-        flash(f'Harga modal untuk bulan {bulan} berhasil ditambahkan.', 'success')
+        flash('Harga jual saat ini berhasil ditambahkan.', 'success')
 
     db.session.commit()
 
-    return redirect(url_for('main.dashboard', bulan=bulan))
+    return redirect(url_for('main.dashboard'))

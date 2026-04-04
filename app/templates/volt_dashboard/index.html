@@ -6,7 +6,18 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
   <div class="d-block mb-4 mb-md-0">
     <h2 class="h4">Data Pembelian Minyak Jelantah</h2>
-    <p class="mb-0">Pantau dan kelola data pembelian minyak jelantah secara lengkap.</p>
+    <p class="mb-0">Pantau dan kelola data pembelian aktif minyak jelantah.</p>
+  </div>
+  <div class="d-flex flex-column gap-2 mb-2 mb-md-0 align-items-end">
+    <form action="{{ url_for('main.tutup_buku') }}" method="POST" class="m-0" onsubmit="return confirm('ATENTION: Anda yakin ingin TUTUP BUKU bulan ini? Semua transaksi pembelian & pengeluaran yang saat ini aktif akan dikunci secara permanen dan dipindah ke arsip (Data All).');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm btn-danger d-inline-flex align-items-center animate-up-2">
+        <i class="fas fa-lock me-2"></i>Tutup Buku Keuangan
+      </button>
+    </form>
+    <a href="{{ url_for('main.tambah_pembelian') }}" class="btn btn-sm btn-gray-800 d-inline-flex align-items-center animate-up-2">
+      <i class="fas fa-plus-circle me-2"></i>Tambah Data Baru
+    </a>
   </div>
 </div>
 
@@ -63,7 +74,7 @@
                 <td>{{ (page - 1) * 10 + loop.index }}</td>
                 <td>{{ purchase.client.nama_client }}</td>
                 <td>{{ purchase.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
-                <td>{{ '%.2f'|format(purchase.jumlah) }}</td>
+                <td>{{ purchase.jumlah|format_quantity }}</td>
                 <td>{{ '{:,.0f}'.format(purchase.harga_per_liter) }}</td>
                 <td>{{ '{:,.0f}'.format(purchase.jumlah * purchase.harga_per_liter) }}</td>
                 <td class="text-center">
@@ -71,6 +82,7 @@
                     <i class="fas fa-edit"></i>
                   </a>
                   <form action="{{ url_for('main.hapus', id=purchase.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin hapus data ini?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
                       <i class="fas fa-trash-alt"></i>
                     </button>

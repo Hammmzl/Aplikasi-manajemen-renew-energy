@@ -25,13 +25,30 @@
 
 <body class="bg-soft d-flex align-items-center min-vh-100">
 
-  {% block content %}{% endblock %}
+  <div class="container-fluid">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="row justify-content-center mt-4">
+          <div class="col-12 col-md-8 col-lg-5">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
 
   <!-- Core -->
-  <script src="{{ url_for('static', filename='volt_dashboard/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='volt_dashboard/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
   <!-- Vendor JS -->
-  <script src="{{ url_for('static', filename='volt_dashboard/vendor/onscreen/dist/on-screen.umd.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='volt_dashboard/assets/vendor/onscreen/dist/on-screen.umd.min.js') }}"></script>
 
   <!-- Volt JS -->
   <script src="{{ url_for('static', filename='volt_dashboard/assets/js/volt.js') }}"></script>

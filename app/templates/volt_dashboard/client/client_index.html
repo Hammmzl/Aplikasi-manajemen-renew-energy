@@ -28,7 +28,10 @@
                 <td>{{ client.email }}</td>
                 <td>
                     <a href="{{ url_for('client.client_edit', id=client.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{{ url_for('client.client_hapus', id=client.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus?')">Hapus</a>
+                    <form action="{{ url_for('client.client_hapus', id=client.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}

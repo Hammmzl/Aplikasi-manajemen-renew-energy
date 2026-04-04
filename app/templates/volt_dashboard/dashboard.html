@@ -31,8 +31,8 @@
       <div class="row d-flex align-items-center">
         <div class="col">
           <h6 class="text-xs text-uppercase text-muted mb-1">Total Quantity</h6>
-          <h4 class="mb-0">{{ total_quantity }} L</h4>
-          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
+          <h4 class="mb-0">{{ total_quantity_display }} L</h4>
+          <small class="text-muted">Dari transaksi terpantau saat ini</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
@@ -52,7 +52,7 @@
         <div class="col">
           <h6 class="text-xs text-uppercase text-muted mb-1">Total Pengeluaran</h6>
           <h4 class="mb-0">Rp {{ "{:,.0f}".format(total_pengeluaran) }}</h4>
-          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
+          <small class="text-muted">Dari transaksi terpantau saat ini</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
@@ -72,7 +72,7 @@
         <div class="col">
           <h6 class="text-xs text-uppercase text-muted mb-1">Laba Bersih</h6>
           <h4 class="mb-0">Rp {{ "{:,.0f}".format(total_profit) }}</h4>
-          <small class="text-muted">Pada bulan {{ bulan_dipilih }}</small>
+          <small class="text-muted">Dari transaksi terpantau saat ini</small>
         </div>
         <div class="col-auto">
           <span class="icon icon-sm">
@@ -95,14 +95,11 @@
   </div>
   <div class="card-body">
 <form action="{{ url_for('main.input_harga_modal') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="bulan">Bulan</label>
-          <input class="form-control" id="bulan" name="bulan" type="month" required value="{{ bulan_dipilih }}">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="harga_modal">Harga Modal (Rp)</label>
-          <input class="form-control" id="harga_modal" name="harga_modal" type="number"placeholder="Contoh: 8000" required value="{{ harga_modal }}">
+        <div class="col-md-12 mb-3">
+          <label for="harga_modal">Harga Modal Jual / Liter (Rp)</label>
+          <input class="form-control" id="harga_modal" name="harga_modal" type="number" step="1" min="0" placeholder="Contoh: 10000" required value="{{ harga_modal|int }}">
         </div>
       </div>
       <div class="d-flex justify-content-end">

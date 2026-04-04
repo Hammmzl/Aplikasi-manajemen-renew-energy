@@ -62,11 +62,11 @@
       {% for purchase in purchases %}
       <tr>
         <td class="text-center">{{ loop.index }}</td>
-        <td>{{ purchase.nama_pengepul }}</td>
+        <td>{{ purchase.client.nama_client if purchase.client else '-' }}</td>
         <td>{{ purchase.tanggal_pembelian.strftime('%d-%m-%Y') }}</td>
-        <td class="text-center">{{ '%.2f'|format(purchase.jumlah) }}</td>
+        <td class="text-center">{{ purchase.jumlah|format_quantity }}</td>
         <td class="text-end">{{ '{:,.0f}'.format(purchase.harga_per_liter) }}</td>
-        <td class="text-end">{{ '{:,.0f}'.format(purchase.jumlah * purchase.harga_per_liter) }}</td>
+        <td class="text-end">{{ '{:,.0f}'.format(purchase.total_harga) }}</td>
       </tr>
       {% endfor %}
     </tbody>

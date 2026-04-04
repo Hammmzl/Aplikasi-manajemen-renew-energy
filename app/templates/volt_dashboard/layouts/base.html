@@ -20,29 +20,190 @@
   <link href="{{ url_for('static', filename='volt_dashboard/assets/vendor/sweetalert2/dist/sweetalert2.min.css') }}" rel="stylesheet" />
   <link href="{{ url_for('static', filename='volt_dashboard/assets/vendor/notyf/notyf.min.css') }}" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/simplebar@6.2.3/dist/simplebar.min.css" rel="stylesheet" />
+
   <!-- Volt CSS -->
   <link href="{{ url_for('static', filename='volt_dashboard/assets/css/volt.css') }}" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
 
-  
+  <style>
+    :root {
+      --app-ink: #25324a;
+      --app-muted: #6b7a90;
+      --app-line: rgba(37, 50, 74, 0.08);
+      --app-surface: rgba(255, 255, 255, 0.9);
+      --app-primary: #1f5eff;
+      --app-primary-2: #2aa6ff;
+      --sidebar-bg: #1d3557;
+      --sidebar-bg-deep: #17304f;
+    }
 
+    body.app-body {
+      background:
+        radial-gradient(circle at top right, rgba(38, 132, 255, 0.1), transparent 24%),
+        linear-gradient(180deg, #eef3f9 0%, #f7f9fc 100%);
+      color: var(--app-ink);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    .app-main {
+      flex: 1 1 auto;
+      padding: 0 1rem 1.5rem;
+    }
+
+    @media (min-width: 992px) {
+      .sidebar {
+        width: 260px !important;
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        z-index: 1040 !important;
+      }
+    }
+
+
+    .sidebar {
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-inner {
+      padding-top: 1.4rem !important;
+      padding-bottom: 1.4rem;
+    }
+
+    .sidebar-brand-panel {
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+      padding: 1rem;
+      margin-bottom: 1.15rem;
+      border-radius: 1.3rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-brand-mark {
+      width: 3rem;
+      height: 3rem;
+      flex: 0 0 3rem;
+      border-radius: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-brand-eyebrow {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.68);
+      margin-bottom: 0.2rem;
+    }
+
+    .sidebar-brand-title {
+      margin: 0;
+      color: #fff;
+      font-size: 1.02rem;
+      font-weight: 700;
+    }
+
+    .sidebar-brand-subtitle {
+      margin: 0.2rem 0 0;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .sidebar-section-label {
+      padding: 1.05rem 0.85rem 0.42rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.46);
+    }
+
+    #sidebarMenu .nav-link,
+    #sidebarMenu .nav-link button {
+      border-radius: 0.95rem;
+      color: rgba(255, 255, 255, 0.82);
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #sidebarMenu .nav-link {
+      padding: 0.72rem 0.9rem;
+    }
+
+    #sidebarMenu .nav-link:hover,
+    #sidebarMenu .nav-link button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(2px);
+    }
+
+    #sidebarMenu .nav-link.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    #sidebarMenu .sidebar-icon {
+      min-width: 1.7rem;
+    }
+
+    #sidebarMenu .sidebar-text {
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    main.content {
+      padding-top: 0;
+    }
+
+    main.content > .py-4 {
+      padding-top: 0.5rem !important;
+    }
+
+    main.content .container-fluid {
+      padding-left: 0.35rem;
+      padding-right: 0.35rem;
+    }
+
+    @media (max-width: 991.98px) {
+      .app-main {
+        padding: 0 0.75rem 1rem;
+      }
+
+
+
+      main.content .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  </style>
 
   {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-  <!-- Main container -->
-  <div class="d-flex flex-column flex-lg-row h-screen">
-  {% include 'volt_dashboard/layouts/sidebar.html' %}
-  
- 
+<body class="app-body">
+  <div class="app-shell d-flex flex-column flex-lg-row h-screen">
+    {% include 'volt_dashboard/layouts/sidebar.html' %}
 
-  
-  <div class="flex-lg-grow-1 overflow-y-auto">
-    {% include 'volt_dashboard/layouts/navbar.html' %}
+    <div class="app-main flex-lg-grow-1 overflow-y-auto">
+      {% include 'volt_dashboard/layouts/navbar.html' %}
 
-      <!-- Page content -->
       <main class="content">
         <div class="py-4">
           <div class="container-fluid">
@@ -58,25 +219,20 @@
             {% endwith %}
 
             {% block content %}
-            <!-- Page specific content -->
             {% endblock %}
           </div>
         </div>
 
-        <!-- Footer -->
         {% include 'volt_dashboard/layouts/footer.html' %}
       </main>
     </div>
   </div>
 
-  <!-- Vendor JS -->
   <script src="{{ url_for('static', filename='volt_dashboard/assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='volt_dashboard/assets/vendor/sweetalert2/dist/sweetalert2.all.min.js') }}"></script>
   <script src="{{ url_for('static', filename='volt_dashboard/assets/vendor/notyf/notyf.min.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/simplebar@6.2.3/dist/simplebar.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/smooth-scroll@16/dist/smooth-scroll.polyfills.min.js"></script>
-
-  <!-- Volt JS -->
   <script src="{{ url_for('static', filename='volt_dashboard/assets/js/volt.js') }}"></script>
 
   {% block extra_js %}{% endblock %}
