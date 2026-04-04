@@ -79,9 +79,8 @@
 
 Jika proyek ini bermanfaat bagi Anda, pertimbangkan untuk memberikan apresiasi atau donasi untuk mendukung pengembangan lebih lanjut:
 
-- 💰 **Saweria**: [https://saweria.co/hammmzl](https://saweria.co/hammmzl) *(Placeholder)*
-- ☕ **Buy Me a Coffee**: [https://buymeacoffee.com/hammmzl](https://buymeacoffee.com/hammmzl) *(Placeholder)*
-- 💳 **PayPal**: [https://paypal.me/hammmzl](https://paypal.me/hammmzl) *(Placeholder)*
+- 💰 **WhatsApp**: +62 085769637412 
+- 💳 **PayPal**: [https://paypal.me/hammmzl](https://paypal.me/hammmzl) 
 
 > [!NOTE]
 > Link di atas adalah placeholder. Silakan ganti dengan link profil donasi Anda yang asli di file `README.md`.
